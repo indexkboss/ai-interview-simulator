@@ -1,23 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './index.css';
+import './App.css';
+import './pages/Auth.css';
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Landing from './pages/Landing';
+import Login   from './pages/Login';
+import Signup  from './pages/Signup';
+
+import Dashboard from './pages/Dashboard';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-      </Routes>
+      <div className="app">
+        <Routes>
+          <Route path="/"        element={<Landing />} />
+          <Route path="/login"   element={<Login />} />
+          <Route path="/signup"  element={<Signup />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route path="*"        element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
-
