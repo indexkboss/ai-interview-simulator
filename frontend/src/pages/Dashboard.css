@@ -1,5 +1,5 @@
 .dashboard {
-  padding: 40px;
+  padding: 25px;
     margin: auto;
   margin: 10px;
   max-width: 1100px;
@@ -102,3 +102,49 @@
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
+
+.mode-selection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.mode-card {
+  padding: 18px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  background: #f9fafb;
+}
+
+.mode-card:hover {
+  transform: translateY(-3px);
+}
+
+.mode-card p {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.mode-card.active {
+  border-color: #2563eb;
+  background: #eef2ff;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+}
+
+.error {
+  color: red;
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
+.info-text {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 12px;
+  line-height: 1.5;
+}
