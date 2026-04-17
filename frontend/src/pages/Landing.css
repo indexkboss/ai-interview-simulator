@@ -1,17 +1,18 @@
-/* ── Hero ── */
+/* ── Landing Shell ── */
 .landing {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
+/* ── Hero ── */
 .hero {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 160px 24px 100px;
+  padding: 16px 24px 10px;
   position: relative;
 }
 
@@ -25,21 +26,21 @@
   border-radius: 100px;
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--accent-bright);
+  color: var(--accent);
   margin-bottom: 28px;
   animation: fadeIn 0.6s var(--transition) both;
 }
 
 .badge-dot {
   width: 7px; height: 7px;
-  background: var(--accent-bright);
+  background: var(--accent);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
 }
 
 .hero-title {
@@ -48,12 +49,13 @@
   letter-spacing: -0.04em;
   line-height: 1.05;
   margin-bottom: 22px;
+  color: var(--text-primary);
   animation: slideUp 0.6s var(--transition) 0.1s both;
 }
 
 .hero-highlight {
   position: relative;
-  color: var(--accent-bright);
+  color: var(--accent);
   display: inline-block;
 }
 .hero-highlight::after {
@@ -63,6 +65,7 @@
   height: 3px;
   background: linear-gradient(90deg, var(--accent), transparent);
   border-radius: 2px;
+  opacity: 0.5;
 }
 
 .hero-sub {
@@ -104,7 +107,7 @@
 }
 .role-chip:hover {
   border-color: var(--accent);
-  color: var(--accent-bright);
+  color: var(--accent);
   background: var(--accent-subtle);
 }
 
@@ -122,7 +125,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent-bright);
+  color: var(--accent);
   margin-bottom: 12px;
 }
 
@@ -165,6 +168,7 @@
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 .feature-card p {
@@ -176,7 +180,7 @@
 /* ── CTA Banner ── */
 .cta-banner {
   margin: 20px 40px 80px;
-  background: linear-gradient(135deg, #0f1e38 0%, #0e1520 100%);
+  background: linear-gradient(135deg, #eff3ff 0%, #e8edff 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 64px 40px;
@@ -184,13 +188,20 @@
   position: relative;
   overflow: hidden;
 }
+
+@media (prefers-color-scheme: dark) {
+  .cta-banner {
+    background: linear-gradient(135deg, #0f1e38 0%, #0e1520 100%);
+  }
+}
+
 .cta-banner::before {
   content: '';
   position: absolute;
   top: -80px; left: 50%;
   transform: translateX(-50%);
   width: 400px; height: 400px;
-  background: radial-gradient(circle, #2563eb18 0%, transparent 70%);
+  background: radial-gradient(circle, #2563eb12 0%, transparent 70%);
   pointer-events: none;
 }
 .cta-banner h2 {
@@ -198,6 +209,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   margin-bottom: 12px;
+  color: var(--text-primary);
 }
 .cta-banner p {
   color: var(--text-secondary);

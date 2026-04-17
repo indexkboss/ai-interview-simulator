@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useNavigate, Link } from 'react-router-dom';
+import Logo from '../components/logo';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -34,19 +35,12 @@ export default function Signup() {
     }
   };
 
-  const strength = getPasswordStrength(form.password);
-
   return (
     <div className="auth-page">
-      <nav className="navbar">
-        <div className="navbar-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <span>⚡</span>PrepAI
-        </div>
-      </nav>
-
       <div className="auth-card">
+        
         <div className="auth-card-header">
-          <div className="auth-card-icon">🚀</div>
+          <Logo />
           <h2>Create account</h2>
           <p>Start practicing interviews for free</p>
         </div>
@@ -67,6 +61,7 @@ export default function Signup() {
               autoComplete="name"
             />
           </div>
+
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -80,6 +75,7 @@ export default function Signup() {
               autoComplete="email"
             />
           </div>
+
           <div className="form-group">
             <label className="form-label">Password</label>
             <input
@@ -92,20 +88,8 @@ export default function Signup() {
               required
               autoComplete="new-password"
             />
-            {form.password && (
-              <div className="password-strength">
-                <div className="strength-bar">
-                  <div
-                    className={`strength-fill strength-${strength.level}`}
-                    style={{ width: strength.width }}
-                  />
-                </div>
-                <span className={`strength-label strength-label-${strength.level}`}>
-                  {strength.label}
-                </span>
-              </div>
-            )}
           </div>
+
           <div className="form-group">
             <label className="form-label">Confirm password</label>
             <input
@@ -131,27 +115,11 @@ export default function Signup() {
         </form>
 
         <div className="auth-footer">
-          Already have an account?{' '}
-          <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/login">Sign in</Link>
         </div>
       </div>
     </div>
   );
-}
-
-function getPasswordStrength(pw) {
-  if (!pw) return { level: 'empty', width: '0%', label: '' };
-  let score = 0;
-  if (pw.length >= 6)  score++;
-  if (pw.length >= 10) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-
-  if (score <= 1) return { level: 'weak',   width: '25%',  label: 'Weak' };
-  if (score <= 2) return { level: 'fair',   width: '50%',  label: 'Fair' };
-  if (score <= 3) return { level: 'good',   width: '75%',  label: 'Good' };
-  return            { level: 'strong', width: '100%', label: 'Strong' };
 }
 
 function getFriendlyError(code) {

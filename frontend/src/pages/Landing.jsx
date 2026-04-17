@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
+import Navbar from '../components/Navbar';
+import Logo from '../components/logo';
 
 const features = [
   {
@@ -31,7 +33,7 @@ export default function Landing() {
 
   return (
     <div className="landing">
-      {/* Navbar */}
+      {/* Navbar
       <nav className="navbar">
         <div className="navbar-logo">
           <span>⚡</span>PrepAI
@@ -40,7 +42,8 @@ export default function Landing() {
           <button className="btn btn-ghost" onClick={() => navigate('/login')}>Log in</button>
           <button className="btn btn-primary" onClick={() => navigate('/signup')}>Get started</button>
         </div>
-      </nav>
+      </nav> */}
+      <Navbar />
 
       {/* Hero */}
       <section className="hero">

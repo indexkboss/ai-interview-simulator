@@ -1,0 +1,28 @@
+/* center container */
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* clickable logo */
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* BIGGER logo */
+.logo-img {
+  width: 120px;   /* 👈 increase size here */
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+/* hover effect */
+.logo:hover .logo-img {
+  transform: scale(1.05);
+}

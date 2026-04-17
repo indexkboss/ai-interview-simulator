@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useNavigate, Link } from 'react-router-dom';
+import Logo from '../components/logo'; 
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,15 +28,11 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <nav className="navbar">
-        <div className="navbar-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <span>⚡</span>PrepAI
-        </div>
-      </nav>
-
       <div className="auth-card">
         <div className="auth-card-header">
-          <div className="auth-card-icon">🔑</div>
+<div className="auth-card-header">
+  <Logo />
+</div>
           <h2>Welcome back</h2>
           <p>Sign in to continue your prep journey</p>
         </div>

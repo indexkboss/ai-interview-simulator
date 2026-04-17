@@ -4,7 +4,6 @@
   flex-direction: column;
 }
 
-/* ── Shared Page Shell ── */
 .page {
   min-height: 100vh;
   display: flex;
@@ -21,10 +20,14 @@
   justify-content: space-between;
   padding: 0 40px;
   height: 64px;
-  background: #080c14cc;
+  background: rgba(245, 247, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
+}
+
+@media (prefers-color-scheme: dark) {
+  .navbar { background: rgba(8, 12, 20, 0.85); }
 }
 
 .navbar-logo {
@@ -37,10 +40,7 @@
   align-items: center;
   gap: 8px;
 }
-
-.navbar-logo span {
-  color: var(--accent-bright);
-}
+.navbar-logo span { color: var(--accent); }
 
 .navbar-links {
   display: flex;
@@ -65,11 +65,11 @@
 .btn-primary {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 0 0 0 var(--accent-glow);
+  box-shadow: 0 1px 3px #2563eb33;
 }
 .btn-primary:hover {
   background: var(--accent-bright);
-  box-shadow: 0 0 24px var(--accent-glow);
+  box-shadow: 0 4px 16px #2563eb33;
   transform: translateY(-1px);
 }
 .btn-primary:active { transform: translateY(0); }
@@ -92,7 +92,7 @@
 }
 .btn-outline:hover {
   border-color: var(--accent);
-  color: var(--accent-bright);
+  color: var(--accent);
   background: var(--accent-subtle);
 }
 
@@ -115,7 +115,7 @@
   transform: none !important;
 }
 
-/* ── Auth Card ── */
+/* ── Auth Page ── */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -131,7 +131,7 @@
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   width: 600px; height: 600px;
-  background: radial-gradient(circle, #2563eb0d 0%, transparent 70%);
+  background: radial-gradient(circle, #2563eb0a 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -181,9 +181,7 @@
 }
 
 /* ── Form Elements ── */
-.form-group {
-  margin-bottom: 18px;
-}
+.form-group { margin-bottom: 18px; }
 
 .form-label {
   display: block;
@@ -240,9 +238,7 @@
   font-size: 0.88rem;
   color: var(--text-secondary);
 }
-.auth-footer a {
-  font-weight: 500;
-}
+.auth-footer a { font-weight: 500; }
 
 /* ── Alert ── */
 .alert {
@@ -253,12 +249,17 @@
   border: 1px solid;
 }
 .alert-error {
-  background: #ef444412;
-  border-color: #ef444430;
-  color: #fca5a5;
+  background: #dc262610;
+  border-color: #dc262628;
+  color: #b91c1c;
 }
 .alert-success {
-  background: #10b98112;
-  border-color: #10b98130;
-  color: #6ee7b7;
+  background: #05966910;
+  border-color: #05966928;
+  color: #047857;
+}
+
+@media (prefers-color-scheme: dark) {
+  .alert-error  { color: #fca5a5; background: #ef444412; border-color: #ef444430; }
+  .alert-success { color: #6ee7b7; background: #10b98112; border-color: #10b98130; }
 }

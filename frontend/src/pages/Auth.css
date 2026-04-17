@@ -35,3 +35,30 @@
 .strength-label-fair   { color: #f59e0b; }
 .strength-label-good   { color: #3b82f6; }
 .strength-label-strong { color: var(--success); }
+
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  color: #111;
+}
+
+.logo-icon {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, #6c63ff, #7f7cff);
+  color: white;
+  border-radius: 10px;
+
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(108, 99, 255, 0.25);
+}
