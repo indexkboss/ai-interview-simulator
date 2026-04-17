@@ -221,6 +221,13 @@ export default function Dashboard() {
         </div>
 
       </div>
+            {/* Footer */}
+      <footer className="footer">
+        <div className="navbar-logo">
+          <span>⚡</span>PrepAI
+        </div>
+        <p>© {new Date().getFullYear()} PrepAI. All rights reserved.</p>
+      </footer>
     </>
   );
 }

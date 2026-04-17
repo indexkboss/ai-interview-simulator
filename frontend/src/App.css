@@ -78,6 +78,8 @@
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid transparent;
+    padding: 6px 12px; /* instead of something larger */
+
 }
 .btn-ghost:hover {
   color: var(--text-primary);

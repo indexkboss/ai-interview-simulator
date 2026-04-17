@@ -25,7 +25,7 @@
 }
 
 /* Links */
-.navbar-links {
+/* .navbar-links {
   display: flex;
   list-style: none;
   gap: 25px;
@@ -40,6 +40,75 @@
 
 .navbar-links li:hover {
   color: black;
+} */
+
+.navbar-links {
+  display: flex;
+  list-style: none;
+  gap: 25px;
+  color: #555;
+  font-size: 14px;
+}
+
+.navbar-links li a {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  padding: 5px 0;
+  display: inline-block;
+  transition: all 0.25s ease;
+}
+
+/* underline */
+.navbar-links li a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0%;
+  height: 2px;
+  background: #6c63ff; /* matches your CTA */
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+/* hover */
+.navbar-links li a:hover {
+  color: #111;
+  transform: translateY(-1px); /* subtle lift */
+}
+
+.navbar-links li a:hover::after {
+  width: 100%;
+}
+.navbar-links li a {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  padding: 5px 0;
+  display: inline-block;
+  transition: all 0.25s ease;
+}
+
+.navbar-links li a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0%;
+  height: 2px;
+  background: #6c63ff;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.navbar-links li a:hover {
+  color: #111;
+  transform: translateY(-2px);
+}
+
+.navbar-links li a:hover::after {
+  width: 100%;
 }
 
 /* Actions */

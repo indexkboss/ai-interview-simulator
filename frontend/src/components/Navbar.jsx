@@ -23,12 +23,28 @@ export default function Navbar() {
         <Logo />
       </Link>
 
-      <ul className="navbar-links">
+      {/* <ul className="navbar-links">
+          <li></li>
+        <li></li>
         <li>Solutions</li>
-        <li>Resources</li>
-        <li>Looking for a job?</li>
+        <li>scores</li>
+        
         <li>Contact</li>
-      </ul>
+        <li>mode</li>
+        <li></li>
+
+        <li></li>
+      </ul> */}
+
+      <ul className="navbar-links">
+        <li></li>
+  <li><Link to="/">Home</Link></li>
+  <li><Link to="/solutions">Solutions</Link></li>
+  <li><Link to="/scores">Scores</Link></li>
+  <li><Link to="/contact">Contact</Link></li>
+  <li><Link to="/mode">Mode</Link></li>
+  <li></li>
+</ul>
 
       <div className="navbar-actions">
         <button className="btn btn-ghost" onClick={() => navigate('/login')}>
