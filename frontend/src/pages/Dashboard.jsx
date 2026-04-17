@@ -6,9 +6,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState(null); 
-  // 'manual' | 'paste' | 'upload'
-
+  const [mode, setMode] = useState(null);
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [jobOfferText, setJobOfferText] = useState('');
@@ -16,61 +14,51 @@ export default function Dashboard() {
   const [file, setFile] = useState(null);
   const [cvFile, setCvFile] = useState(null);
 
-  const [submitted, setSubmitted] = useState(false);
-
   const [errors, setErrors] = useState({});
 
- const handleStart = () => {
-  setSubmitted(true); // 👈 ADD THIS
+  const handleStart = () => {
+    let newErrors = {};
 
-  let newErrors = {};
+    if (!interviewType) {
+      newErrors.interviewType = 'Interview type is required';
+    }
 
-  if (!interviewType) {
-    newErrors.interviewType = 'Interview type is required';
-  }
+    if (!mode) {
+      newErrors.mode = 'Please select a method to start';
+    }
 
-  if (!mode) {
-    newErrors.mode = 'Please select a method';
-  }
+    if (interviewType !== 'hr' && !cvFile) {
+      newErrors.cv = 'CV is required for this interview';
+    }
 
-  if (interviewType !== 'hr' && !cvFile) {
-    newErrors.cv = 'CV is required for this interview';
-  }
-
-  if (mode === 'manual') {
-    if (!jobTitle) {
+    if (mode === 'manual' && !jobTitle) {
       newErrors.jobTitle = 'Job title is required';
     }
-  }
 
-  if (mode === 'paste') {
-    if (!jobOfferText) {
+    if (mode === 'paste' && !jobOfferText) {
       newErrors.jobOffer = 'Job offer is required';
     }
-  }
 
-  if (mode === 'upload') {
-    if (!file) {
+    if (mode === 'upload' && !file) {
       newErrors.file = 'File is required';
     }
-  }
 
-  setErrors(newErrors);
+    setErrors(newErrors);
 
-  if (Object.keys(newErrors).length > 0) return;
+    if (Object.keys(newErrors).length > 0) return;
 
-  navigate('/interview-room', {
-    state: {
-      mode,
-      jobTitle,
-      jobDescription,
-      jobOfferText,
-      interviewType,
-      fileName: file?.name || null,
-      cvName: cvFile?.name || null,
-    },
-  });
-};
+    navigate('/interview-room', {
+      state: {
+        mode,
+        jobTitle,
+        jobDescription,
+        jobOfferText,
+        interviewType,
+        fileName: file?.name || null,
+        cvName: cvFile?.name || null,
+      },
+    });
+  };
 
   return (
     <>
@@ -81,7 +69,7 @@ export default function Dashboard() {
         {/* HEADER */}
         <div className="dashboard-header">
           <h1>Interview Hub</h1>
-          <p>Choose how you want to prepare your interview</p>
+          <p>Choose how you want to prepare your interview<span style={{ color: 'red' }}>*</span></p>
         </div>
 
         {/* MODE SELECTION */}
@@ -112,24 +100,18 @@ export default function Dashboard() {
           </div>
 
         </div>
-{errors.mode && (
-  <p className="error" style={{ textAlign: 'center', marginTop: 10 }}>
-    {errors.mode}
-  </p>
-)}
-{submitted && !mode && (
-  <p className="info-text">
-    choose how you want to start:
-    specific job offer (paste or upload)
-    <br/>Or generate an interview from a job title
-  </p>
-)}
-        {/* GRID */}
+
+        {errors.mode && (
+          <p className="error" style={{ textAlign: 'center', marginTop: 10 }}>
+            {errors.mode}
+          </p>
+        )}
+
+        {/* INTERVIEW TYPE */}
         <div className="dashboard-grid">
 
-          {/* INTERVIEW TYPE */}
           <div className="dashboard-card">
-            <h3>🎙️ Interview Type</h3>
+            <h3>🎙️ Interview Type<span style={{ color: 'red' }}>*</span></h3>
 
             <div className="radio-group">
               <label>
@@ -162,37 +144,37 @@ export default function Dashboard() {
                 Full Interview
               </label>
             </div>
+
             {errors.interviewType && (
-  <p className="error">{errors.interviewType}</p>
-)}
+              <p className="error">{errors.interviewType}</p>
+            )}
           </div>
 
-<div className="dashboard-card">
-<h3>
-  📄 Upload CV{' '}
-  {interviewType !== 'hr' && (
-    <span style={{ color: 'red' }}>*</span>
-  )}
-</h3>  <input
-    type="file"
-    accept=".pdf,.doc,.docx"
-    onChange={(e) => setCvFile(e.target.files[0])}
-  />
-  {cvFile && <p>Selected: {cvFile.name}</p>}
-  {errors.cv && <p className="error" style={{ color: 'red' }}>{errors.cv}</p>}
-</div>
+          {/* CV */}
+          <div className="dashboard-card">
+            <h3>📄 Upload CV {interviewType !== 'hr' && <span style={{ color: 'red' }}>*</span>}</h3>
 
-          {/* MANUAL MODE */}
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => setCvFile(e.target.files[0])}
+            />
+
+            {cvFile && <p>Selected: {cvFile.name}</p>}
+            {errors.cv && <p className="error">{errors.cv}</p>}
+          </div>
+
+          {/* JOB INPUT */}
           {mode === 'manual' && (
             <>
               <div className="dashboard-card">
-                <h3>🎯 Job Title <span className="required" style={{ color: 'red' }}>*</span></h3>
+                <h3>🎯 Job Title <span style={{ color: 'red' }}>*</span></h3>
                 <input
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-
                   placeholder="e.g. Software Engineer"
                 />
+                {errors.jobTitle && <p className="error">{errors.jobTitle}</p>}
               </div>
 
               <div className="dashboard-card">
@@ -200,34 +182,32 @@ export default function Dashboard() {
                 <textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste job description..."
                 />
               </div>
             </>
           )}
 
-          {/* PASTE MODE */}
           {mode === 'paste' && (
             <div className="dashboard-card">
-              <h3>📋 Paste Job Offer<span className="required" style={{ color: 'red' }}>*</span></h3>
+              <h3>📋 Paste Job Offer <span style={{ color: 'red' }}>*</span></h3>
               <textarea
                 value={jobOfferText}
                 onChange={(e) => setJobOfferText(e.target.value)}
-                placeholder="Paste LinkedIn job offer, email, etc..."
               />
+              {errors.jobOffer && <p className="error">{errors.jobOffer}</p>}
             </div>
           )}
 
-          {/* UPLOAD MODE */}
           {mode === 'upload' && (
             <div className="dashboard-card">
-              <h3>📄 Upload File<span className="required" style={{ color: 'red' }}>*</span></h3>
+              <h3>📄 Upload File <span style={{ color: 'red' }}>*</span></h3>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.txt"
                 onChange={(e) => setFile(e.target.files[0])}
               />
               {file && <p>Selected: {file.name}</p>}
+              {errors.file && <p className="error">{errors.file}</p>}
             </div>
           )}
 
@@ -236,7 +216,7 @@ export default function Dashboard() {
         {/* CTA */}
         <div className="dashboard-action">
           <button className="btn btn-primary btn-lg" onClick={handleStart}>
-            🚀 Start Interview
+          Start Interview
           </button>
         </div>
 
