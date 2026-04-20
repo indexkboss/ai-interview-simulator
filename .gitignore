@@ -1,11 +1,27 @@
-# backend
+# Python
 __pycache__/
-venv/
-.env
+*.pyc
+*.pyo
+*.pyd
 
-# frontend
+# Django
+db.sqlite3
+
+# ML files
+*.h5
+*.csv
+*.ipynb
+
+# Env
+.env
+venv/
+
+# OS
+.DS_Store
+
+
+# Node
 node_modules/
 dist/
+build/
 
-# system
-.DS_Store
