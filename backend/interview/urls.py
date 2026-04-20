@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import analyze_answer
+from .views import analyze_image
 
 urlpatterns = [
-    path("analyze/", analyze_answer),
+    path("analyze/", analyze_image),
 ]
