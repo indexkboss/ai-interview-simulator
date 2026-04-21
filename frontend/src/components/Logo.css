@@ -16,7 +16,7 @@
 
 /* BIGGER logo */
 .logo-img {
-  width: 120px;   /* 👈 increase size here */
+  width: 120px;   /*  increase size here */
   height: auto;
   object-fit: contain;
   transition: transform 0.2s ease;

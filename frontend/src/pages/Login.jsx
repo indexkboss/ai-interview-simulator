@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../components/logo'; 
 
 export default function Login() {
+
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -30,9 +31,8 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-card-header">
-<div className="auth-card-header">
   <Logo />
-</div>
+
           <h2>Welcome back</h2>
           <p>Sign in to continue your prep journey</p>
         </div>
