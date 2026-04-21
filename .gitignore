@@ -10,7 +10,7 @@ db.sqlite3
 # ML files
 *.h5
 *.csv
-*.ipynb
+
 
 # Env
 .env
