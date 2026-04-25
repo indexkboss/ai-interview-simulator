@@ -47,7 +47,7 @@ export default function Dashboard() {
 
     if (Object.keys(newErrors).length > 0) return;
 
-    navigate('/interview-room', {
+    navigate('/interview', {
       state: {
         mode,
         jobTitle,

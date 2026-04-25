@@ -9,6 +9,8 @@ import Signup  from './pages/Signup';
 
 import Dashboard from './pages/Dashboard';
 
+import Interview from './pages/Interview';
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -19,7 +21,9 @@ export default function App() {
           <Route path="/signup"  element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
 
-          <Route path="*"        element={<Navigate to="/" replace />} />
+          
+          <Route path="/interview" element={<Interview />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </BrowserRouter>
