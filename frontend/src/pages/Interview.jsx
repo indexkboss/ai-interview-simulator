@@ -1,10 +1,45 @@
 import React, { useRef, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Interview() {
   const videoRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { interviewType } = location.state || {};
+
+  // 🎯 QUESTIONS
+  const hrQuestions = [
+    "Tell me about yourself",
+    "Why do you want this job?",
+    "What are your strengths?",
+    "What are your weaknesses?"
+  ];
+
+  const technicalQuestions = [
+    "Explain OOP concepts",
+    "What is a database?",
+    "Difference between API and REST?",
+    "What is a REST API?"
+  ];
+
+  let questions = [];
+
+  if (interviewType === "hr") {
+    questions = hrQuestions;
+  } else if (interviewType === "technical") {
+    questions = technicalQuestions;
+  } else {
+    questions = [...hrQuestions, ...technicalQuestions];
+  }
+
+  // 🎯 STATE
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [emotion, setEmotion] = useState("...");
+  const [emotionsHistory, setEmotionsHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // 🎥 START CAMERA
   useEffect(() => {
     startCamera();
   }, []);
@@ -26,9 +61,9 @@ export default function Interview() {
     }
   };
 
+  // 📸 CAPTURE IMAGE
   const captureFrame = async () => {
     const video = videoRef.current;
-
     if (!video) return;
 
     const canvas = document.createElement("canvas");
@@ -43,6 +78,7 @@ export default function Interview() {
     sendToBackend(base64);
   };
 
+  // 🤖 SEND TO BACKEND
   const sendToBackend = async (base64) => {
     try {
       setLoading(true);
@@ -56,7 +92,11 @@ export default function Interview() {
       });
 
       const data = await response.json();
+
       setEmotion(data.emotion);
+
+      // 📊 STOCKAGE EMOTIONS
+      setEmotionsHistory(prev => [...prev, data.emotion]);
 
     } catch (error) {
       console.error("API error:", error);
@@ -65,24 +105,59 @@ export default function Interview() {
     }
   };
 
+  // ➡️ NEXT QUESTION
+  const nextQuestion = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    } else {
+      finishInterview();
+    }
+  };
+
+  // 🏁 FIN INTERVIEW
+  const finishInterview = () => {
+    // 📊 Calcul score simple
+    const happyCount = emotionsHistory.filter(e => e === "happy").length;
+    const neutralCount = emotionsHistory.filter(e => e === "neutral").length;
+    const negativeCount = emotionsHistory.length - happyCount - neutralCount;
+
+    const score = emotionsHistory.length
+      ? ((happyCount / emotionsHistory.length) * 100).toFixed(2)
+      : 0;
+
+    // 👉 envoi vers page report
+    navigate("/report", {
+      state: {
+        emotionsHistory,
+        score,
+        happyCount,
+        neutralCount,
+        negativeCount
+      }
+    });
+  };
+
   return (
     <div style={{ textAlign: "center", padding: "20px" }}>
       <h2>🎥 AI Interview</h2>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: "30px" }}>
-        
-        {/* Avatar interviewer */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "40px" }}>
+
+        {/* 🤖 AVATAR */}
         <div>
           <img
             src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
             alt="avatar"
             style={{ width: "150px" }}
           />
-          <p>Interviewer</p>
-          <p><strong>Tell me about yourself</strong></p>
+          <p><strong>Interviewer</strong></p>
+
+          <p style={{ maxWidth: "200px" }}>
+            {questions[currentQuestion]}
+          </p>
         </div>
 
-        {/* Webcam user */}
+        {/* 🎥 USER */}
         <div>
           <video
             ref={videoRef}
@@ -99,9 +174,23 @@ export default function Interview() {
 
       </div>
 
+      {/* 📊 EMOTION */}
       <h3>
-        Emotion: {loading ? "Analyse..." : emotion}
+        Emotion: {loading ? "Analyzing..." : emotion}
       </h3>
+
+      {/* ➡️ NEXT */}
+      <button
+        onClick={nextQuestion}
+        style={{
+          marginTop: "20px",
+          padding: "10px 20px",
+          fontSize: "16px"
+        }}
+      >
+        Next Question
+      </button>
+
     </div>
   );
 }

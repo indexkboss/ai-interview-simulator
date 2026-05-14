@@ -10,6 +10,8 @@ import Signup  from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 
 import Interview from './pages/Interview';
+import Report from './pages/Report';
+
 
 export default function App() {
   return (
@@ -23,6 +25,7 @@ export default function App() {
 
           
           <Route path="/interview" element={<Interview />} />
+          <Route path="/report" element={<Report />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
