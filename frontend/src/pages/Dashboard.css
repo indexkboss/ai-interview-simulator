@@ -2,7 +2,7 @@
   padding: 30px;
   margin: 20px auto;
   max-width: 1100px;
-  background: #f8fafc;
+  background: #ffffff;
   border-radius: 20px;
 }
 
@@ -102,16 +102,17 @@
   border-radius: 14px;
   cursor: pointer;
   background: white;
+  /* background: #f9fafb; */
   transition: all 0.2s ease;
 }
 
 .mode-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(9, 8, 12, 0.151);
 }
 
 .mode-card.active {
-  border-color: #2563eb;
+  border-color: #9c5ddac1;
   background: #eff6ff;
   box-shadow: 0 8px 20px rgba(37,99,235,0.15);
 }

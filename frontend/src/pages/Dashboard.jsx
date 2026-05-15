@@ -79,7 +79,7 @@ export default function Dashboard() {
             className={`mode-card ${mode === 'manual' ? 'active' : ''}`}
             onClick={() => setMode('manual')}
           >
-            ✍️ Manual Input
+             Manual Input
             <p>Job title + description</p>
           </div>
 
@@ -87,7 +87,7 @@ export default function Dashboard() {
             className={`mode-card ${mode === 'paste' ? 'active' : ''}`}
             onClick={() => setMode('paste')}
           >
-            📋 Paste Job Offer
+             Paste Job Offer
             <p>From LinkedIn, email, etc.</p>
           </div>
 
@@ -95,7 +95,7 @@ export default function Dashboard() {
             className={`mode-card ${mode === 'upload' ? 'active' : ''}`}
             onClick={() => setMode('upload')}
           >
-            📄 Upload File
+             Upload File
             <p>PDF / DOC / TXT</p>
           </div>
 
@@ -111,7 +111,7 @@ export default function Dashboard() {
         <div className="dashboard-grid">
 
           <div className="dashboard-card">
-            <h3>🎙️ Interview Type<span style={{ color: 'red' }}>*</span></h3>
+            <h3> Interview Type<span style={{ color: 'red' }}>*</span></h3>
 
             <div className="radio-group">
               <label>
@@ -152,7 +152,7 @@ export default function Dashboard() {
 
           {/* CV */}
           <div className="dashboard-card">
-            <h3>📄 Upload CV {interviewType !== 'hr' && <span style={{ color: 'red' }}>*</span>}</h3>
+            <h3> Upload CV {interviewType !== 'hr' && <span style={{ color: 'red' }}>*</span>}</h3>
 
             <input
               type="file"
@@ -168,7 +168,7 @@ export default function Dashboard() {
           {mode === 'manual' && (
             <>
               <div className="dashboard-card">
-                <h3>🎯 Job Title <span style={{ color: 'red' }}>*</span></h3>
+                <h3> Job Title <span style={{ color: 'red' }}>*</span></h3>
                 <input
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
@@ -178,7 +178,7 @@ export default function Dashboard() {
               </div>
 
               <div className="dashboard-card">
-                <h3>💼 Job Description</h3>
+                <h3> Job Description</h3>
                 <textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
@@ -189,7 +189,7 @@ export default function Dashboard() {
 
           {mode === 'paste' && (
             <div className="dashboard-card">
-              <h3>📋 Paste Job Offer <span style={{ color: 'red' }}>*</span></h3>
+              <h3> Paste Job Offer <span style={{ color: 'red' }}>*</span></h3>
               <textarea
                 value={jobOfferText}
                 onChange={(e) => setJobOfferText(e.target.value)}
@@ -200,7 +200,7 @@ export default function Dashboard() {
 
           {mode === 'upload' && (
             <div className="dashboard-card">
-              <h3>📄 Upload File <span style={{ color: 'red' }}>*</span></h3>
+              <h3> Upload File <span style={{ color: 'red' }}>*</span></h3>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.txt"
