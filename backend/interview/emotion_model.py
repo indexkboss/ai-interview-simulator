@@ -20,3 +20,4 @@ emotion_model = pipeline(
 
 def predict_emotion(image):
     return emotion_model(image)
+

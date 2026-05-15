@@ -93,13 +93,21 @@
 
 
 from django.http import JsonResponse
-from .emotion_model import predict_emotion
+from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 import base64
 import io
 import json
-from django.views.decorators.csrf import csrf_exempt
+import os
 
+from .emotion_model import predict_emotion
+from .audio_model import predict_audio_emotion
+from .stress_engine_v2 import compute_stress_v2
+
+
+# -------------------------
+# IMAGE EMOTION API
+# -------------------------
 @csrf_exempt
 def emotion_api(request):
     if request.method == "POST":
@@ -116,6 +124,72 @@ def emotion_api(request):
                 "emotion": result[0]["label"],
                 "score": float(result[0]["score"])
             })
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+
+# -------------------------
+# AUDIO EMOTION API
+# -------------------------
+@csrf_exempt
+def audio_emotion_api(request):
+    if request.method == "POST":
+        try:
+            audio_file = request.FILES.get("audio")
+
+            if not audio_file:
+                return JsonResponse({"error": "No audio file"}, status=400)
+
+            temp_path = "temp_audio.wav"
+
+            with open(temp_path, "wb+") as f:
+                for chunk in audio_file.chunks():
+                    f.write(chunk)
+
+            result = predict_audio_emotion(temp_path)
+
+            os.remove(temp_path)
+
+            return JsonResponse({
+                "emotion": result[0]["label"],
+                "score": float(result[0]["score"])
+            })
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+
+# -------------------------
+# 🔥 STRESS API (PRO V2)
+# -------------------------
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import os
+
+
+
+
+@csrf_exempt
+def stress_api(request):
+    if request.method == "POST":
+        try:
+            audio_file = request.FILES.get("audio")
+
+            if not audio_file:
+                return JsonResponse({"error": "No audio file"}, status=400)
+
+            temp_path = "temp_audio.wav"
+
+            with open(temp_path, "wb+") as f:
+                for chunk in audio_file.chunks():
+                    f.write(chunk)
+
+            stress_result = compute_stress_v2(temp_path)
+
+            os.remove(temp_path)
+
+            return JsonResponse(stress_result)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
