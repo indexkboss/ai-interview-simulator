@@ -47,7 +47,7 @@ export default function Interview() {
   const navigate = useNavigate();
   const sessionState = location.state || {};
   const { interviewType = "hr" } = sessionState;
-  const maxQuestions = interviewType === "full" ? 10 : 6;
+  const maxQuestions = interviewType === "full" ? 10 : 1;//change back to 5
   const systemPrompt = buildSystemPrompt(sessionState);
 
   /*

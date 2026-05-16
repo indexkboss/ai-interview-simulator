@@ -2,31 +2,40 @@ import { useNavigate } from 'react-router-dom';
 import './Landing.css';
 import Navbar from '../components/Navbar';
 import Logo from '../components/logo';
+import Footer from "../components/Footer";
+
 
 const features = [
   {
     icon: '🎙️',
-    title: 'Realistic AI Interviews',
-    desc: 'Practice with an AI that asks real interview questions tailored to your role and seniority level.',
+    title: 'Entretiens IA réalistes',
+    desc: 'Entraînez-vous avec une IA qui pose de vraies questions d’entretien adaptées à votre rôle et à votre niveau d’expérience.',
   },
   {
     icon: '📊',
-    title: 'Instant Feedback',
-    desc: 'Get detailed analysis on your answers — clarity, structure, confidence, and technical accuracy.',
+    title: 'Retour instantané',
+    desc: 'Obtenez une analyse détaillée de vos réponses — clarté, structure, confiance et précision technique.',
   },
   {
     icon: '🎯',
-    title: 'Role-Specific Prep',
-    desc: 'From SWE to Product to Data — we cover hundreds of job roles with curated question banks.',
+    title: 'Préparation par rôle',
+    desc: 'Du développement au produit en passant par les données — nous couvrons des centaines de rôles avec des banques de questions soigneusement sélectionnées.',
   },
   {
     icon: '🔁',
-    title: 'Unlimited Practice',
-    desc: 'Run as many sessions as you need. Every interview is unique, so you\'re never repeating the same questions.',
+    title: 'Pratique illimitée',
+    desc: 'Effectuez autant de sessions que nécessaire. Chaque entretien est unique, vous ne répéterez jamais les mêmes questions.',
   },
 ];
 
-const roles = ['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'DevOps Engineer', 'Marketing Lead'];
+const roles = [
+  'Ingénieur logiciel',
+  'Chef de produit',
+  'Data Scientist',
+  'Designer UX',
+  'Ingénieur DevOps',
+  'Responsable marketing',
+];
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -40,22 +49,22 @@ export default function Landing() {
       <section className="hero">
         <div className="hero-badge">
           <span className="badge-dot" />
-          AI-Powered Interview Training
+          Formation aux entretiens par IA
         </div>
         <h1 className="hero-title">
-          Ace your next<br />
-          <span className="hero-highlight">interview</span> with AI
+          Réussissez votre<br />
+          <span className="hero-highlight">entretien</span> avec l’IA
         </h1>
         <p className="hero-sub">
-          Practice with a realistic AI interviewer. Get instant, actionable feedback.<br />
-          Land the job you actually want.
+          Entraînez-vous avec un interviewer IA réaliste. Obtenez des retours immédiats et exploitables.<br />
+          Décrochez le poste que vous méritez.
         </p>
         <div className="hero-cta">
           <button className="btn btn-primary btn-lg" onClick={() => navigate('/signup')}>
-            Start practicing free →
+            Commencer à s’entraîner gratuitement →
           </button>
           <button className="btn btn-outline btn-lg" onClick={() => navigate('/login')}>
-            Sign in
+            Se connecter
           </button>
         </div>
 
@@ -68,8 +77,8 @@ export default function Landing() {
 
       {/* Features */}
       <section className="features-section">
-        <div className="section-label">Why PrepAI</div>
-        <h2 className="section-title">Everything you need to prepare</h2>
+        <div className="section-label">Pourquoi PrepAI</div>
+        <h2 className="section-title">Tout ce qu’il vous faut pour vous préparer</h2>
         <div className="features-grid">
           {features.map(f => (
             <div key={f.title} className="feature-card">
@@ -83,20 +92,13 @@ export default function Landing() {
 
       {/* CTA Banner */}
       <section className="cta-banner">
-        <h2>Ready to land your dream job?</h2>
-        <p>Join thousands of candidates who improved their interview skills with PrepAI.</p>
+        <h2>Prêt à décrocher le job de vos rêves ?</h2>
+        <p>Rejoignez des milliers de candidats qui ont amélioré leurs compétences en entretien avec PrepAI.</p>
         <button className="btn btn-primary btn-lg" onClick={() => navigate('/signup')}>
-          Create free account
+          Créer un compte gratuit
         </button>
       </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="navbar-logo">
-          PrepAI
-        </div>
-        <p>© {new Date().getFullYear()} PrepAI. All rights reserved.</p>
-      </footer>
+<Footer logoText="PrepAI" />
     </div>
   );
 }

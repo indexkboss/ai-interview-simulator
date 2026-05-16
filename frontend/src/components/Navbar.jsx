@@ -38,10 +38,10 @@ export default function Navbar() {
       <ul className="navbar-links">
         <li></li>
   <li><Link to="/">Home</Link></li>
-  <li><Link to="/solutions">Solutions</Link></li>
-  <li><Link to="/scores">Scores</Link></li>
+  <li><Link to="/login">Solutions</Link></li>
+  <li><Link to="/login">Scores</Link></li>
   <li><Link to="/contact">Contact</Link></li>
-  <li><Link to="/mode">Mode</Link></li>
+  <li><Link to="/login">Mode</Link></li>
   <li></li>
 </ul>
 

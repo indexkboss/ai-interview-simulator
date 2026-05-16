@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import copyWritingImg from "../assets/copy-writing.png";
 import pasteImg from "../assets/paste.png";
 import SideNav from '../components/SideNav';
+import Footer from '../components/Footer';
 
 // Read file as base64
 function readFileAsBase64(file) {
@@ -259,11 +260,7 @@ export default function Dashboard() {
 
       </div>
       </div>
-
-      <footer className="footer">
-        <div className="navbar-logo"><span>⚡</span>PrepAI</div>
-        <p>© {new Date().getFullYear()} PrepAI. All rights reserved.</p>
-      </footer>
+<Footer logoText="PrepAI" />
     </>
   );
 }
