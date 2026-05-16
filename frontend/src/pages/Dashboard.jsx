@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './Dashboard.css';
-import NavbarConnected from '../components/NavbarConnected';
+import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import copyWritingImg from "../assets/copy-writing.png";
 import pasteImg from "../assets/paste.png";
@@ -85,7 +85,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <NavbarConnected />
 <div className="dashboard-layout">
   
   <SideNav />

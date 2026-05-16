@@ -3,21 +3,78 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./Interview.css";
 import AIAvatar from "../components/AIAvatar";
 
-// ─── Claude API ───────────────────────────────────────────────────────────────
-async function askClaude(messages, systemPrompt) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages,
-    }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.content?.map((b) => b.text || "").join("").trim() || "";
+// ─── Configuration des modèles Gemini ─────────────────────────────────────
+const MODELS = {
+  primary: "gemini-2.0-flash",      // modèle principal
+  fallback: "gemini-2.5-flash-lite" // modèle de secours (plus lent mais plus de quota)
+};
+
+// ─── Fonction d'appel API avec gestion des quotas ────────────────────────
+async function callGeminiWithRetry(prompt, model = MODELS.primary, retries = 3, delay = 1000) {
+  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+  if (!apiKey) throw new Error("Clé API Gemini manquante");
+
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+  const requestBody = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1000 },
+  };
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (res.status === 429) {
+        const retryAfter = res.headers.get("Retry-After");
+        const wait = retryAfter ? parseInt(retryAfter) * 1000 : delay * attempt;
+        console.warn(`Quota atteint pour ${model}, nouvel essai dans ${wait}ms...`);
+        await new Promise(resolve => setTimeout(resolve, wait));
+        continue;
+      }
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Gemini API error ${res.status}: ${errText}`);
+      }
+
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (!text) throw new Error("Réponse vide de l'API");
+      return text;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      console.warn(`Tentative ${attempt} échouée, nouvelle tentative dans ${delay}ms`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("Échec après plusieurs tentatives");
+}
+
+// ─── askGemini – construit le prompt historique et appelle avec fallback ──
+async function askGemini(messages, systemPrompt) {
+  let fullPrompt = systemPrompt + "\n\n";
+  for (const msg of messages) {
+    const role = msg.role === "assistant" ? "Assistant : " : "Candidat : ";
+    fullPrompt += role + msg.content + "\n";
+  }
+  fullPrompt += "Assistant : ";
+
+  try {
+    // Tentative avec modèle principal
+    return await callGeminiWithRetry(fullPrompt, MODELS.primary);
+  } catch (err) {
+    console.warn("Modèle principal échoué, tentative avec fallback", err);
+    try {
+      return await callGeminiWithRetry(fullPrompt, MODELS.fallback);
+    } catch (fallbackErr) {
+      console.error("Fallback échoué également", fallbackErr);
+      throw new Error("Service IA indisponible (quota épuisé). Réessayez plus tard.");
+    }
+  }
 }
 
 function buildSystemPrompt(state) {
@@ -41,33 +98,26 @@ Règles STRICTES :
 - Ne répète JAMAIS une question déjà posée.`;
 }
 
-// ─── Composant principal ──────────────────────────────────────────────────────
+// ─── Composant principal ──────────────────────────────────────────────────
 export default function Interview() {
   const location = useLocation();
   const navigate = useNavigate();
   const sessionState = location.state || {};
-  const { interviewType = "hr" } = sessionState;
-  const maxQuestions = interviewType === "full" ? 10 : 1;//change back to 5
+  const { interviewType = "hr", jobTitle = "" } = sessionState;
+  const maxQuestions = interviewType === "full" ? 10 : 5;
   const systemPrompt = buildSystemPrompt(sessionState);
 
-  /*
-   * ARCHITECTURE : toute la logique métier vit dans `session` (une ref mutable).
-   * Le state React `ui` n'existe que pour provoquer des re-renders d'affichage.
-   * Résultat : handleNextQuestion lit TOUJOURS des données fraîches,
-   * zéro stale-closure possible.
-   */
   const session = useRef({
-    answers: [],          // { question: string, answer: string }[]
-    index: 0,             // numéro de la question courante (0-based)
+    answers: [],
+    index: 0,
     currentQuestion: "",
-    transcript: "",       // texte vocal final accumulé
-    liveTranscript: "",   // texte vocal interim (en cours de reconnaissance)
-    emotionLog: [],       // { time, emotion }[]
-    isEnding: false,      // navigation en cours → ignorer tout
-    isProcessing: false,  // verrou anti-double-clic
+    transcript: "",
+    liveTranscript: "",
+    emotionLog: [],
+    isEnding: false,
+    isProcessing: false,
   });
 
-  // State React — uniquement pour le rendu
   const [ui, setUi] = useState({
     currentQuestion: "",
     index: 0,
@@ -79,19 +129,17 @@ export default function Interview() {
     currentEmotion: "neutral",
     emotionLog: [],
     cameraReady: false,
+    error: null,
   });
   const patch = (delta) => setUi((prev) => ({ ...prev, ...delta }));
 
-  // Timer — ref pour éviter la stale closure dans setInterval
   const timeRef = useRef(0);
   const [displayTime, setDisplayTime] = useState(0);
-
-  // DOM refs
   const videoRef = useRef(null);
   const recognitionRef = useRef(null);
   const emotionIntervalRef = useRef(null);
+  const startListeningRef = useRef(null);
 
-  // ── Timer ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setInterval(() => {
       timeRef.current += 1;
@@ -100,32 +148,26 @@ export default function Interview() {
     return () => clearInterval(t);
   }, []);
 
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec < 10 ? "0" : ""}${sec}`;
-  };
+  const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
-  // ── Camera ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
-        if (!videoRef.current) return;
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          patch({ cameraReady: true });
-        };
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play();
+            patch({ cameraReady: true });
+          };
+        }
       })
       .catch((err) => console.error("Caméra:", err));
-
     return () => {
       videoRef.current?.srcObject?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
-  // ── Détection d'émotions (face-api) ───────────────────────────────────────
   useEffect(() => {
     if (!window.faceapi) return;
     const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
@@ -149,14 +191,8 @@ export default function Interview() {
         }, 2000);
       })
       .catch(() => {});
-
     return () => clearInterval(emotionIntervalRef.current);
   }, []);
-
-  // ── TTS ────────────────────────────────────────────────────────────────────
-  // speak est stable (useCallback sans dépendances) — elle accède à startListening
-  // via la ref speakRef pour éviter les dépendances circulaires.
-  const startListeningRef = useRef(null);
 
   const speak = useCallback((text) => {
     speechSynthesis.cancel();
@@ -166,12 +202,9 @@ export default function Interview() {
 
     const doSpeak = () => {
       const voices = speechSynthesis.getVoices();
-      const frVoice =
-        voices.find((v) => v.lang.startsWith("fr") && v.name.toLowerCase().includes("female")) ||
-        voices.find((v) => v.lang.startsWith("fr")) ||
-        voices[0];
+      const frVoice = voices.find(v => v.lang.startsWith("fr") && v.name.toLowerCase().includes("female")) ||
+                      voices.find(v => v.lang.startsWith("fr")) || voices[0];
       if (frVoice) utterance.voice = frVoice;
-
       utterance.onstart = () => patch({ isSpeaking: true });
       utterance.onend = () => {
         patch({ isSpeaking: false });
@@ -183,26 +216,18 @@ export default function Interview() {
       };
       speechSynthesis.speak(utterance);
     };
-
-    if (speechSynthesis.getVoices().length > 0) {
-      doSpeak();
-    } else {
-      speechSynthesis.onvoiceschanged = doSpeak;
-    }
+    speechSynthesis.getVoices().length ? doSpeak() : (speechSynthesis.onvoiceschanged = doSpeak);
   }, []);
 
-  // ── Reconnaissance vocale ──────────────────────────────────────────────────
   const startListening = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
     recognitionRef.current?.abort();
-
     const rec = new SR();
     rec.lang = "fr-FR";
     rec.continuous = true;
     rec.interimResults = true;
     recognitionRef.current = rec;
-
     rec.onresult = (e) => {
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -217,14 +242,12 @@ export default function Interview() {
       session.current.liveTranscript = interim;
       patch({ liveTranscript: interim });
     };
-
     rec.onerror = () => patch({ isListening: false });
     rec.onend = () => patch({ isListening: false });
     rec.start();
     patch({ isListening: true });
   }, []);
 
-  // Enregistrer startListening dans la ref pour que speak() puisse l'appeler
   startListeningRef.current = startListening;
 
   const stopListening = useCallback(() => {
@@ -234,30 +257,21 @@ export default function Interview() {
     patch({ isListening: false, liveTranscript: "" });
   }, []);
 
-  // ── Question suivante ──────────────────────────────────────────────────────
   const handleNextQuestion = useCallback(async () => {
     const s = session.current;
-
-    // Verrous : on ignore si navigation en cours ou déjà en train de traiter
     if (s.isEnding || s.isProcessing) return;
     s.isProcessing = true;
 
     stopListening();
 
-    // === Lire DEPUIS LA REF (jamais depuis les params de useCallback) ===
     const userAnswer = (s.transcript + " " + s.liveTranscript).trim() || "(pas de réponse)";
     const completedQA = { question: s.currentQuestion, answer: userAnswer };
-
-    // Mettre à jour la ref en premier
     s.answers = [...s.answers, completedQA];
-    s.index = s.index + 1;
+    s.index++;
     s.transcript = "";
     s.liveTranscript = "";
-
-    // Puis mettre à jour l'affichage
     patch({ transcript: "", liveTranscript: "", index: s.index });
 
-    // Fin de l'entretien ?
     if (s.index >= maxQuestions) {
       s.isEnding = true;
       speechSynthesis.cancel();
@@ -268,46 +282,38 @@ export default function Interview() {
           emotionLog: s.emotionLog,
           duration: timeRef.current,
           jobTitle: sessionState.jobTitle,
-          interviewType,
+          interviewType: sessionState.interviewType,
         },
       });
-      return; // isProcessing reste true : on ne reviendra jamais ici
+      return;
     }
 
-    // Demander la prochaine question à Claude
-    patch({ isLoading: true });
+    patch({ isLoading: true, error: null });
     try {
-      // Historique complet depuis la ref — toujours à jour
       const history = s.answers.flatMap((qa) => [
         { role: "assistant", content: qa.question },
         { role: "user", content: qa.answer },
       ]);
-
-      const nextQ = await askClaude(history, systemPrompt);
-
+      const nextQ = await askGemini(history, systemPrompt);
       s.currentQuestion = nextQ;
       patch({ currentQuestion: nextQ, isLoading: false });
       speak(nextQ);
     } catch (err) {
-      console.error("Claude API:", err);
-      const fallback = "P";//ouvez-vous me parler d'un défi professionnel que vous avez surmonté ?
+      console.error(err);
+      patch({ error: "L'IA est momentanément indisponible (quota atteint). Veuillez réessayer plus tard." });
+      const fallback = "Pouvez-vous me parler d'un défi professionnel que vous avez surmonté ?";
       s.currentQuestion = fallback;
       patch({ currentQuestion: fallback, isLoading: false });
       speak(fallback);
     } finally {
       s.isProcessing = false;
     }
-  }, [navigate, speak, stopListening, systemPrompt, interviewType, maxQuestions, sessionState.jobTitle]);
+  }, [navigate, speak, stopListening, systemPrompt, sessionState, maxQuestions]);
 
-  // ── Première question au montage ───────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     patch({ isLoading: true });
-
-    askClaude(
-      [{ role: "user", content: "Commence l'entretien par la première question." }],
-      systemPrompt
-    )
+    askGemini([{ role: "user", content: "Commence l'entretien par la première question." }], systemPrompt)
       .then((q) => {
         if (cancelled) return;
         session.current.currentQuestion = q;
@@ -322,76 +328,48 @@ export default function Interview() {
         patch({ currentQuestion: fallback, isLoading: false });
         speak(fallback);
       });
-
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line
 
-  // ── Rendu ──────────────────────────────────────────────────────────────────
   const emotionEmoji = {
     happy: "😊", neutral: "😐", sad: "😔",
     angry: "😤", fearful: "😨", disgusted: "🤢", surprised: "😲",
   };
 
-  const {
-    currentQuestion, index, transcript, liveTranscript,
-    isSpeaking, isListening, isLoading, currentEmotion, emotionLog, cameraReady,
-  } = ui;
+  const { currentQuestion, index, transcript, liveTranscript,
+    isSpeaking, isListening, isLoading, currentEmotion, emotionLog, cameraReady, error } = ui;
 
   return (
     <div className="zoom-container">
-      {/* TOP BAR */}
       <div className="topbar">
         <div className="brand">⚡ PrepAI Interview Room</div>
         <div className="status">
-          {isLoading ? "⏳ IA réfléchit..."
-            : isSpeaking ? "🔊 IA parle..."
-            : isListening ? "🎙️ À vous de parler..."
-            : "En attente"}
+          {error ? "⚠️ Problème de connexion IA" :
+           isLoading ? "⏳ IA réfléchit..." :
+           isSpeaking ? "🔊 IA parle..." :
+           isListening ? "🎙️ À vous de parler..." : "En attente"}
         </div>
         <div className="topbar-right">
-          <div className="emotion-badge">
-            {emotionEmoji[currentEmotion] || "😐"} {currentEmotion}
-          </div>
-          <div className="question-counter">
-            {index + 1} / {maxQuestions}
-          </div>
+          <div className="emotion-badge">{emotionEmoji[currentEmotion] || "😐"} {currentEmotion}</div>
+          <div className="question-counter">{index + 1} / {maxQuestions}</div>
           <div className="timer">⏱ {formatTime(displayTime)}</div>
         </div>
       </div>
 
-      {/* MAIN */}
       <div className="main">
-        {/* AI PANEL */}
         <div className="ai-panel">
           <AIAvatar isSpeaking={isSpeaking} />
-
           <div className={`speech-bubble ${isLoading ? "loading" : ""}`}>
-            {isLoading ? (
-              <span className="loading-dots">
-                En réflexion<span>.</span><span>.</span><span>.</span>
-              </span>
-            ) : (
-              currentQuestion
-            )}
+            {error ? error : isLoading ? "En réflexion..." : currentQuestion}
           </div>
-
           <div className="action-buttons">
-            <button
-              className="btn btn-mic"
-              onClick={isListening ? stopListening : startListening}
-              disabled={isSpeaking || isLoading}
-            >
+            <button className="btn btn-mic" onClick={isListening ? stopListening : startListening} disabled={isSpeaking || isLoading}>
               {isListening ? "⏹ Stop micro" : "🎙️ Parler"}
             </button>
-            <button
-              className="btn btn-next"
-              onClick={handleNextQuestion}
-              disabled={isLoading || isSpeaking}
-            >
+            <button className="btn btn-next" onClick={handleNextQuestion} disabled={isLoading || isSpeaking}>
               {index + 1 >= maxQuestions ? "🏁 Terminer" : "Suivant →"}
             </button>
           </div>
-
           {(transcript || liveTranscript) && (
             <div className="transcript-box">
               <p className="transcript-final">{transcript}</p>
@@ -399,18 +377,12 @@ export default function Interview() {
             </div>
           )}
         </div>
-
-        {/* USER PANEL */}
         <div className="user-panel">
           <div className="camera-box">
             <video ref={videoRef} autoPlay playsInline muted />
-            {!cameraReady && (
-              <div className="camera-placeholder">📷 Activation caméra...</div>
-            )}
+            {!cameraReady && <div className="camera-placeholder">📷 Activation caméra...</div>}
           </div>
-          <div className="user-label">
-            Vous (Candidat){isListening && <span className="mic-indicator"> 🔴</span>}
-          </div>
+          <div className="user-label">Vous (Candidat){isListening && <span className="mic-indicator"> 🔴</span>}</div>
           {emotionLog.length > 0 && (
             <div className="emotion-timeline">
               {emotionLog.slice(-8).map((e, i) => (

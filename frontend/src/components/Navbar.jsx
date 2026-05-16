@@ -1,60 +1,85 @@
-import { useEffect, useState } from 'react';
-import './Navbar.css';
-import Logo from '../components/logo'; 
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { signOut } from 'firebase/auth';
+import { auth } from '../services/firebase';
+import Logo from './logo';
+import './Navbar.css';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate('/');
+  };
+
+  if (loading) return null;
+
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-      
-        <Logo />
+<div 
+  className="navbar-logo" 
+  onClick={() => {
+    navigate(user ? "/dashboard" : "/");
+    setMenuOpen(false);
+  }}
+  style={{ cursor: "pointer" }}
+>
+  <Logo />
+</div>
 
+      <button className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)}>☰</button>
 
-      {/* <ul className="navbar-links">
-          <li></li>
-        <li></li>
-        <li>Solutions</li>
-        <li>scores</li>
-        
-        <li>Contact</li>
-        <li>mode</li>
-        <li></li>
-
-        <li></li>
-      </ul> */}
-
-      <ul className="navbar-links">
-        <li></li>
-  <li><Link to="/">Home</Link></li>
-  <li><Link to="/login">Solutions</Link></li>
-  <li><Link to="/login">Scores</Link></li>
-  <li><Link to="/contact">Contact</Link></li>
-  <li><Link to="/login">Mode</Link></li>
-  <li></li>
-</ul>
+      <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
+        {!user && <li><Link to="/" onClick={() => setMenuOpen(false)}>Accueil</Link></li>}
+        {user && <li><Link to="/dashboard" onClick={() => setMenuOpen(false)}>Tableau de bord</Link></li>}
+        {user && <li><Link to="/report" onClick={() => setMenuOpen(false)}>Rapport</Link></li>}
+        {user && <li><Link to="/history" onClick={() => setMenuOpen(false)}>Historique</Link></li>}
+        <li><Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link></li>
+      </ul>
 
       <div className="navbar-actions">
-        <button className="btn btn-ghost" onClick={() => navigate('/login')}>
-          Log in
-        </button>
-
-        <button className="btn btn-primary" onClick={() => navigate('/signup')}>
-          Get started
-        </button>
+        {user ? (
+          <div className="user-menu" ref={dropdownRef}>
+            <button className="user-avatar" onClick={() => setDropdownOpen(!dropdownOpen)}>
+              {user.name?.charAt(0).toUpperCase()}
+            </button>
+            {dropdownOpen && (
+              <div className="user-dropdown show">
+                <button onClick={() => navigate('/profile')}>Mon profil</button>
+                <button onClick={handleLogout}>Déconnexion</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <button className="btn-ghost" onClick={() => navigate('/login')}>Connexion</button>
+            <button className="btn-primary" onClick={() => navigate('/signup')}>Commencer</button>
+          </>
+        )}
       </div>
-
     </nav>
   );
 }

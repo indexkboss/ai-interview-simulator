@@ -187,7 +187,6 @@ const Contact = () => {
   if (configError) {
     return (
       <div className="contact-page-new">
-        <Navbar />
         <div style={{ 
           textAlign: 'center', 
           padding: '50px 20px',
@@ -226,7 +225,6 @@ const Contact = () => {
 
   return (
     <div className="contact-page-new">
-      <Navbar />
 
       <motion.div
         className="contact-header-new"

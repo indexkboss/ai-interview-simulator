@@ -43,8 +43,6 @@ export default function Landing() {
   return (
     <div className="landing">
 
-      <Navbar />
-
       {/* Hero */}
       <section className="hero">
         <div className="hero-badge">
