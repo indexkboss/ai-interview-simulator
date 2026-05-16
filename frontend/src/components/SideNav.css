@@ -1,0 +1,139 @@
+/* .sidenav {
+  width: 280px;
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #f1f5f9;
+
+
+  overflow: hidden;
+} */
+.sidenav {
+  width: 280px;
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #f1f5f9;
+
+  display: flex;
+  flex-direction: column;
+
+  align-self: stretch; /* 🔥 KEY FIX */
+}
+.sidenav-header {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sidenav-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.sidenav-header p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+
+
+.tip-card {
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  transition: 0.2s;
+}
+
+.tip-card:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+/* .sidenav {
+  width: 280px;
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #f1f5f9;
+
+  height: 100%;        
+  min-height: 100%;    
+  display: flex;
+  flex-direction: column;
+} */
+/* .sidenav-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  flex: 1;              
+  overflow-y: auto;    
+} */
+/* .sidenav-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+} */
+/* .sidenav-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+} */
+
+/* .sidenav {
+  width: 280px;
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #f1f5f9;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;   
+} */
+ 
+.sidenav-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  gap: 14px;          /* espace propre entre cards */
+  padding-top: 10px;
+}
+.tip-card {
+  background: #f8fafc;
+  padding: 14px 14px;
+
+  border-radius: 12px;
+  font-size: 0.86rem;
+  color: #0f172a;
+
+  border: 1px solid #e2e8f0;
+  transition: 0.2s ease;
+
+  line-height: 1.4;
+
+  min-height: 60px;   /* 🔥 donne de la présence */
+  display: flex;
+  align-items: center;
+}
+.tip-card:hover {
+  transform: translateY(-2px);
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  box-shadow: 0 6px 14px rgba(37,99,235,0.08);
+}

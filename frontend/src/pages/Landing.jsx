@@ -33,16 +33,7 @@ export default function Landing() {
 
   return (
     <div className="landing">
-      {/* Navbar
-      <nav className="navbar">
-        <div className="navbar-logo">
-          <span>⚡</span>PrepAI
-        </div>
-        <div className="navbar-links">
-          <button className="btn btn-ghost" onClick={() => navigate('/login')}>Log in</button>
-          <button className="btn btn-primary" onClick={() => navigate('/signup')}>Get started</button>
-        </div>
-      </nav> */}
+
       <Navbar />
 
       {/* Hero */}
@@ -102,7 +93,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="footer">
         <div className="navbar-logo">
-          <span>⚡</span>PrepAI
+          PrepAI
         </div>
         <p>© {new Date().getFullYear()} PrepAI. All rights reserved.</p>
       </footer>

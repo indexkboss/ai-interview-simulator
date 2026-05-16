@@ -1,11 +1,24 @@
 import { useState } from 'react';
 import './Dashboard.css';
-import Navbar from '../components/Navbar';
+import NavbarConnected from '../components/NavbarConnected';
 import { useNavigate } from 'react-router-dom';
+import copyWritingImg from "../assets/copy-writing.png";
+import pasteImg from "../assets/paste.png";
+import SideNav from '../components/SideNav';
+
+// Read file as base64
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
-
+  const [showRequired, setShowRequired] = useState(false);
   const [mode, setMode] = useState(null);
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
@@ -13,219 +26,242 @@ export default function Dashboard() {
   const [interviewType, setInterviewType] = useState('');
   const [file, setFile] = useState(null);
   const [cvFile, setCvFile] = useState(null);
-
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const handleStart = () => {
+  const handleStart = async () => {
+
+    setShowRequired(true);
+
     let newErrors = {};
 
-    if (!interviewType) {
-      newErrors.interviewType = 'Interview type is required';
-    }
-
-    if (!mode) {
-      newErrors.mode = 'Please select a method to start';
-    }
-
-    if (interviewType !== 'hr' && !cvFile) {
-      newErrors.cv = 'CV is required for this interview';
-    }
-
-    if (mode === 'manual' && !jobTitle) {
-      newErrors.jobTitle = 'Job title is required';
-    }
-
-    if (mode === 'paste' && !jobOfferText) {
-      newErrors.jobOffer = 'Job offer is required';
-    }
-
-    if (mode === 'upload' && !file) {
-      newErrors.file = 'File is required';
-    }
+    if (!interviewType) newErrors.interviewType = "Le type d'entretien est requis";
+    if (!mode) newErrors.mode = 'Veuillez choisir une méthode';
+    if (interviewType !== 'hr' && !cvFile) newErrors.cv = 'Le CV est requis pour ce type d\'entretien';
+    if (mode === 'manual' && !jobTitle) newErrors.jobTitle = 'Le titre du poste est requis';
+    if (mode === 'paste' && !jobOfferText) newErrors.jobOffer = "L'offre d'emploi est requise";
+    if (mode === 'upload' && !file) newErrors.file = 'Le fichier est requis';
 
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) return;
 
-    navigate('/interview', {
-      state: {
-        mode,
-        jobTitle,
-        jobDescription,
-        jobOfferText,
-        interviewType,
-        fileName: file?.name || null,
-        cvName: cvFile?.name || null,
-      },
-    });
+    setLoading(true);
+    try {
+      let cvBase64 = null;
+      let jobFileText = null;
+
+      if (cvFile) cvBase64 = await readFileAsBase64(cvFile);
+      if (file && mode === 'upload') {
+        if (file.type === 'text/plain') {
+          jobFileText = await file.text();
+        }
+      }
+
+      navigate('/interview', {
+        state: {
+          mode,
+          jobTitle,
+          jobDescription,
+          jobOfferText: jobOfferText || jobFileText || '',
+          interviewType,
+          fileName: file?.name || null,
+          cvName: cvFile?.name || null,
+          cvBase64,
+        },
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const interviewTypes = [
+    { value: 'hr', label: 'Entretien RH', desc: 'Soft skills, motivation, parcours', icon: '🤝' },
+    { value: 'technical', label: 'Entretien Technique', desc: 'Compétences métier spécifiques', icon: '💻' },
+    { value: 'full', label: 'Entretien Complet', desc: 'RH + technique (10 questions)', icon: '🎯' },
+  ];
 
   return (
     <>
-      <Navbar />
-
+      <NavbarConnected />
+<div className="dashboard-layout">
+  
+  <SideNav />
       <div className="dashboard">
 
         {/* HEADER */}
         <div className="dashboard-header">
           <h1>Interview Hub</h1>
-          <p>Choose how you want to prepare your interview<span style={{ color: 'red' }}>*</span></p>
+          <p>
+            Préparez votre entretien en quelques étapes
+          </p>
         </div>
 
-        {/* MODE SELECTION */}
+        {/* MODE */}
+        <h3 className="section-subtitle">
+          1. Comment voulez-vous décrire le poste ?
+          {showRequired && <span style={{ color: 'red' }}> *</span>}
+          {errors.mode && <span style={{ color: 'red',textAlign: 'center', marginTop: 10 , fontSize: 10}}> {errors.mode}</span>}
+        </h3>
+
         <div className="mode-selection">
-
-          <div
-            className={`mode-card ${mode === 'manual' ? 'active' : ''}`}
-            onClick={() => setMode('manual')}
-          >
-             Manual Input
-            <p>Job title + description</p>
+          <div className={`mode-card ${mode === 'manual' ? 'active' : ''}`} onClick={() => setMode('manual')}>
+            <img src={copyWritingImg} alt="a" style={{ width: "22px", height: "20px" }} />
+            <strong>Saisie manuelle</strong>
+            <p>Titre + description du poste</p>
           </div>
 
-          <div
-            className={`mode-card ${mode === 'paste' ? 'active' : ''}`}
-            onClick={() => setMode('paste')}
-          >
-             Paste Job Offer
-            <p>From LinkedIn, email, etc.</p>
+          <div className={`mode-card ${mode === 'paste' ? 'active' : ''}`} onClick={() => setMode('paste')}>
+            <img src={pasteImg} alt="b" style={{ width: "22px", height: "20px" }} />
+            <strong>Coller l'offre</strong>
+            <p>Depuis LinkedIn, email, etc.</p>
           </div>
 
-          <div
-            className={`mode-card ${mode === 'upload' ? 'active' : ''}`}
-            onClick={() => setMode('upload')}
-          >
-             Upload File
+          <div className={`mode-card ${mode === 'upload' ? 'active' : ''}`} onClick={() => setMode('upload')}>
+            📎 <strong>Uploader un fichier</strong>
             <p>PDF / DOC / TXT</p>
           </div>
-
         </div>
 
-        {errors.mode && (
-          <p className="error" style={{ textAlign: 'center', marginTop: 10 }}>
-            {errors.mode}
-          </p>
-        )}
-
         {/* INTERVIEW TYPE */}
-        <div className="dashboard-grid">
+        <h3 className="section-subtitle">
+          2. Type d'entretien
+          {showRequired && <span style={{ color: 'red' }}> *</span>}
+          {errors.interviewType && <span style={{ color: 'red', marginLeft: 6 , fontSize: 10}}> {errors.interviewType}</span>}
+        </h3>
 
-          <div className="dashboard-card">
-            <h3> Interview Type<span style={{ color: 'red' }}>*</span></h3>
-
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  value="hr"
-                  checked={interviewType === 'hr'}
-                  onChange={(e) => setInterviewType(e.target.value)}
-                />
-                HR Interview
-              </label>
-
-              <label>
-                <input
-                  type="radio"
-                  value="technical"
-                  checked={interviewType === 'technical'}
-                  onChange={(e) => setInterviewType(e.target.value)}
-                />
-                Technical Interview
-              </label>
-
-              <label>
-                <input
-                  type="radio"
-                  value="full"
-                  checked={interviewType === 'full'}
-                  onChange={(e) => setInterviewType(e.target.value)}
-                />
-                Full Interview
-              </label>
+        <div className="interview-type-grid">
+          {interviewTypes.map(({ value, label, desc, icon }) => (
+            <div
+              key={value}
+              className={`type-card ${interviewType === value ? 'active' : ''}`}
+              onClick={() => setInterviewType(value)}
+            >
+              <span className="type-icon">{icon}</span>
+              <div>
+                <strong>{label}</strong>
+                <p>{desc}</p>
+              </div>
+              <input
+                type="radio"
+                checked={interviewType === value}
+                onChange={() => setInterviewType(value)}
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
+          ))}
+        </div>
 
-            {errors.interviewType && (
-              <p className="error">{errors.interviewType}</p>
+        {/* CV */}
+        <div className="dashboard-card">
+          <h3>
+            📄 Votre CV
+            {showRequired && interviewType !== 'hr' && (
+              <span style={{ color: 'red' }}> *</span>
             )}
-          </div>
+            {errors.cv && (
+              <span style={{ color: 'red', marginLeft: 6 , fontSize: 10}}>
+                {errors.cv}
+              </span>
+            )}
+          </h3>
 
-          {/* CV */}
-          <div className="dashboard-card">
-            <h3> Upload CV {interviewType !== 'hr' && <span style={{ color: 'red' }}>*</span>}</h3>
+          <p className="info-text">Formats acceptés : PDF, DOC, DOCX</p>
 
+          <label className="file-upload-label">
             <input
               type="file"
               accept=".pdf,.doc,.docx"
               onChange={(e) => setCvFile(e.target.files[0])}
+              style={{ display: 'none' }}
             />
 
-            {cvFile && <p>Selected: {cvFile.name}</p>}
-            {errors.cv && <p className="error">{errors.cv}</p>}
-          </div>
-
-          {/* JOB INPUT */}
-          {mode === 'manual' && (
-            <>
-              <div className="dashboard-card">
-                <h3> Job Title <span style={{ color: 'red' }}>*</span></h3>
-                <input
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="e.g. Software Engineer"
-                />
-                {errors.jobTitle && <p className="error">{errors.jobTitle}</p>}
-              </div>
-
-              <div className="dashboard-card">
-                <h3> Job Description</h3>
-                <textarea
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-
-          {mode === 'paste' && (
-            <div className="dashboard-card">
-              <h3> Paste Job Offer <span style={{ color: 'red' }}>*</span></h3>
-              <textarea
-                value={jobOfferText}
-                onChange={(e) => setJobOfferText(e.target.value)}
-              />
-              {errors.jobOffer && <p className="error">{errors.jobOffer}</p>}
-            </div>
-          )}
-
-          {mode === 'upload' && (
-            <div className="dashboard-card">
-              <h3> Upload File <span style={{ color: 'red' }}>*</span></h3>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-              {file && <p>Selected: {file.name}</p>}
-              {errors.file && <p className="error">{errors.file}</p>}
-            </div>
-          )}
-
+            {cvFile ? (
+              <span className="file-selected">✅ {cvFile.name}</span>
+            ) : (
+              <span className="file-placeholder">Cliquer pour choisir un fichier</span>
+            )}
+          </label>
         </div>
+
+        {/* JOB INPUT */}
+        {mode === 'manual' && (
+          <div className="dashboard-card">
+            <h3>
+              💼 Titre du poste
+              {showRequired && <span style={{ color: 'red' }}> *</span>}
+              {errors.jobTitle && (
+                <span style={{ color: 'red', marginLeft: 6 , fontSize: 10}}>
+                  {errors.jobTitle}
+                </span>
+              )}
+            </h3>
+
+            <input
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="ex: Ingénieur Logiciel Senior"
+            />
+          </div>
+        )}
+
+        {mode === 'paste' && (
+          <div className="dashboard-card">
+            <h3>
+              📋 Coller l'offre d'emploi
+              {showRequired && <span style={{ color: 'red' }}> *</span>}
+              {errors.jobOffer && (
+                <span style={{ color: 'red', marginLeft: 6 , fontSize: 10}}>
+                  {errors.jobOffer}
+                </span>
+              )}
+            </h3>
+
+            <textarea
+              value={jobOfferText}
+              onChange={(e) => setJobOfferText(e.target.value)}
+              rows={6}
+            />
+          </div>
+        )}
+
+        {mode === 'upload' && (
+          <div className="dashboard-card">
+            <h3>
+              📎 Fichier de l'offre
+              {showRequired && <span style={{ color: 'red' }}> *</span>}
+              {errors.file && (
+                <span style={{ color: 'red', marginLeft: 6 , fontSize: 10}}>
+                  {errors.file}
+                </span>
+              )}
+            </h3>
+
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+          </div>
+        )}
 
         {/* CTA */}
         <div className="dashboard-action">
-          <button className="btn btn-primary btn-lg" onClick={handleStart}>
-          Start Interview
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={handleStart}
+            disabled={loading}
+          >
+            {loading ? '⏳ Préparation...' : '🚀 Démarrer l\'entretien'}
           </button>
         </div>
 
       </div>
-            {/* Footer */}
+      </div>
+
       <footer className="footer">
-        <div className="navbar-logo">
-          <span>⚡</span>PrepAI
-        </div>
+        <div className="navbar-logo"><span>⚡</span>PrepAI</div>
         <p>© {new Date().getFullYear()} PrepAI. All rights reserved.</p>
       </footer>
     </>

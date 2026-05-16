@@ -19,9 +19,8 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       
-      <Link to="/" className="navbar-logo">
         <Logo />
-      </Link>
+
 
       {/* <ul className="navbar-links">
           <li></li>
