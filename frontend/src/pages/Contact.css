@@ -1,7 +1,7 @@
 /* ── Contact page – cohérent avec le dashboard ── */
 
 .contact-page-new {
-  background: #f8fafc;  /* même fond léger que dashboard */
+  background: #f5f7ff;  
   min-height: 100vh;
 }
 

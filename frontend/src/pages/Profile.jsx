@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { updateProfile } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import './Profile.css';
+import Footer from '../components/Footer';
 
 export default function Profile() {
   const { user } = useAuth();

@@ -1,11 +1,20 @@
+/* Structure principale pour coller le footer en bas */
 .report-page {
+  min-height: 100vh;
+  background: #f5f7ff;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-container {
+  flex: 1;                     /* prend tout l'espace disponible */
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
-  background: #f8fafc;
-  min-height: calc(100vh - 64px);
+  width: 100%;
 }
 
+/* les styles suivants sont inchangés, mais maintenant à l'intérieur de .report-container */
 .report-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -25,7 +34,6 @@
   color: #64748b;
 }
 
-/* Score card */
 .score-card {
   background: white;
   border-radius: 24px;
@@ -66,7 +74,6 @@
   color: #475569;
 }
 
-/* Tabs */
 .report-tabs {
   display: flex;
   gap: 0.5rem;
@@ -88,7 +95,6 @@
   border-bottom: 2px solid #6c63ff;
 }
 
-/* Overview grid */
 .overview-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -116,7 +122,6 @@
   color: #334155;
 }
 
-/* Question feedback */
 .questions-feedback {
   display: flex;
   flex-direction: column;
@@ -184,7 +189,6 @@
   border-radius: 12px;
 }
 
-/* Emotions */
 .emotion-timeline-full {
   display: flex;
   flex-direction: column;
@@ -224,12 +228,12 @@
   color: #475569;
 }
 
-/* Actions */
 .report-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 .btn-outline {
   background: transparent;
@@ -264,6 +268,7 @@
   text-align: center;
   padding: 4rem;
 }
+
 @media (max-width: 768px) {
   .score-card {
     flex-direction: column;

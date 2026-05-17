@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -39,25 +39,26 @@ export default function Navbar() {
 
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-<div 
-  className="navbar-logo" 
-  onClick={() => {
-    navigate(user ? "/dashboard" : "/");
-    setMenuOpen(false);
-  }}
-  style={{ cursor: "pointer" }}
->
-  <Logo />
-</div>
+      <div 
+        className="navbar-logo" 
+        onClick={() => {
+          navigate(user ? "/dashboard" : "/");
+          setMenuOpen(false);
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <Logo />
+      </div>
 
       <button className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)}>☰</button>
 
       <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-        {!user && <li><Link to="/" onClick={() => setMenuOpen(false)}>Accueil</Link></li>}
-        {user && <li><Link to="/dashboard" onClick={() => setMenuOpen(false)}>Tableau de bord</Link></li>}
-        {user && <li><Link to="/report" onClick={() => setMenuOpen(false)}>Rapport</Link></li>}
-        {user && <li><Link to="/history" onClick={() => setMenuOpen(false)}>Historique</Link></li>}
-        <li><Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link></li>
+        {user && <li><NavLink to="/dashboard" onClick={() => setMenuOpen(false)}>Tableau de bord</NavLink></li>}
+        {!user && <li><NavLink to="/" onClick={() => setMenuOpen(false)}>Accueil</NavLink></li>}
+        {user && <li><NavLink to="/home" onClick={() => setMenuOpen(false)}>Home</NavLink></li>}
+        {user && <li><NavLink to="/reports" onClick={() => setMenuOpen(false)}>Rapport</NavLink></li>}
+        {user && <li><NavLink to="/history" onClick={() => setMenuOpen(false)}>Historique</NavLink></li>}
+        <li><NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact</NavLink></li>
       </ul>
 
       <div className="navbar-actions">

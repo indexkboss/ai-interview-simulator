@@ -1,4 +1,7 @@
 // components/Footer.jsx
+
+import "./Footer.css";   // ← import du CSS
+
 const Footer = ({ logoText = "PrepAI", copyrightText = "" }) => {
   return (
     <footer className="footer">

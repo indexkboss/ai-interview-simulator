@@ -1,12 +1,17 @@
+/* History.css – version propre et unifiée */
 .history-page {
-  min-height: calc(100vh - 64px);
-  background: #f8fafc;
-  padding: 40px 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7ff;
 }
 
 .history-container {
+  flex: 1;
   max-width: 900px;
   margin: 0 auto;
+  padding: 40px 20px;
+  width: 100%;
 }
 
 .history-header {
@@ -80,6 +85,12 @@
   color: #64748b;
 }
 
+.session-duration {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
 .session-score {
   text-align: right;
   font-weight: 700;
@@ -122,6 +133,7 @@
   to { transform: rotate(360deg); }
 }
 
+/* Responsive */
 @media (max-width: 640px) {
   .session-card {
     flex-direction: column;

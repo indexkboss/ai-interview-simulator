@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import Footer from '../components/Footer';
 import './History.css';
 
 export default function History() {
@@ -64,18 +65,19 @@ export default function History() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="history-page">
-        <div className="loading-spinner" />
-        <p>Chargement de l'historique...</p>
-      </div>
-    );
-  }
+  // Affichage du contenu principal
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="history-container">
+          <div className="loading-spinner" />
+          <p style={{ textAlign: 'center' }}>Chargement de l'historique...</p>
+        </div>
+      );
+    }
 
-  if (error) {
-    return (
-      <div className="history-page">
+    if (error) {
+      return (
         <div className="history-container">
           <div className="empty-history">
             <p style={{ color: 'red' }}>{error}</p>
@@ -84,12 +86,10 @@ export default function History() {
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return (
-    <div className="history-page">
+    return (
       <div className="history-container">
         <div className="history-header">
           <h1>📋 Historique des entretiens</h1>
@@ -128,6 +128,13 @@ export default function History() {
           </div>
         )}
       </div>
+    );
+  };
+
+  return (
+    <div className="history-page">
+      {renderContent()}
+      <Footer logoText="PrepAI" />
     </div>
   );
 }

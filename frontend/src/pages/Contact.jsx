@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "@formspree/react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer"; // ← import du footer réutilisable
 import "./Contact.css";
 
 const Contact = () => {
@@ -161,25 +162,25 @@ const Contact = () => {
     {
       person: "Kenza",
       label: "GitHub (Kenza)",
-      url: "https://github.com/kenzatazi",
+      url: "https://github.com/TAZIKenza",
       icon: <span style={{ fontSize: "24px" }}>🐙</span>,
     },
     {
       person: "Kenza",
       label: "LinkedIn (Kenza)",
-      url: "https://www.linkedin.com/in/kenza-tazi",
+      url: "https://www.linkedin.com/in/kenzatazi04/",
       icon: <span style={{ fontSize: "24px" }}>🔗</span>,
     },
     {
       person: "Kenza",
       label: "Email (Kenza)",
-      url: "mailto:kenza.tazi@example.com",
+      url: "mailto:kenzatazi91@gmail.com",
       icon: <span style={{ fontSize: "24px" }}>📧</span>,
     },
     {
       person: "Kenza",
       label: "Téléphone (Kenza)",
-      onClick: () => (window.location.href = "tel:+2126XXXXXXXX"),
+      onClick: () => (window.location.href = "tel:+212626662536"),
       icon: <span style={{ fontSize: "24px" }}>📞</span>,
     },
   ];
@@ -218,7 +219,7 @@ const Contact = () => {
             bossonykhadijae@gmail.com
           </a>
         </div>
-        <Footer scrollToSection={scrollToSection} />
+        <Footer logoText="PrepAI" /> {/* Utilisation du Footer réutilisable */}
       </div>
     );
   }
@@ -403,83 +404,9 @@ const Contact = () => {
         </div>
       </motion.div>
 
-      <Footer scrollToSection={scrollToSection} />
+      <Footer logoText="PrepAI" /> {/* Footer réutilisable */}
     </div>
   );
 };
-
-const Footer = ({ scrollToSection }) => (
-  <footer className="footer-main">
-    <div className="footer-gradient-line" />
-
-    <div className="footer-inner">
-      <motion.div
-        className="footer-brand"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        <span className="footer-logo">BT</span>
-        <div>
-          <p className="footer-name">BOSSONY Khadija<br/>TAZI Kenza</p>
-          <p className="footer-tagline">Ingénieures en IA & Big Data</p>
-        </div>
-      </motion.div>
-
-      <motion.nav
-        className="footer-nav"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        {/* Vous pouvez ajouter des liens de navigation si nécessaire */}
-      </motion.nav>
-
-      <motion.div
-        className="footer-right"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        <div className="footer-socials">
-          {/* Liens pour Khadija */}
-          <a href="https://github.com/indexkboss" target="_blank" rel="noopener noreferrer" className="footer-social-btn" style={{ fontSize: "20px" }} title="GitHub Khadija">
-            🐙
-          </a>
-          <a href="https://linkedin.com/in/khadijabossony" target="_blank" rel="noopener noreferrer" className="footer-social-btn" style={{ fontSize: "20px" }} title="LinkedIn Khadija">
-            🔗
-          </a>
-          <a href="mailto:bossonykhadijae@gmail.com" className="footer-social-btn" style={{ fontSize: "20px" }} title="Email Khadija">
-            📧
-          </a>
-          {/* Liens pour Kenza */}
-          <a href="https://github.com/kenzatazi" target="_blank" rel="noopener noreferrer" className="footer-social-btn" style={{ fontSize: "20px" }} title="GitHub Kenza">
-            🐙
-          </a>
-          <a href="https://linkedin.com/in/kenza-tazi" target="_blank" rel="noopener noreferrer" className="footer-social-btn" style={{ fontSize: "20px" }} title="LinkedIn Kenza">
-            🔗
-          </a>
-          <a href="mailto:kenza.tazi@example.com" className="footer-social-btn" style={{ fontSize: "20px" }} title="Email Kenza">
-            📧
-          </a>
-        </div>
-
-        <button
-          className="footer-top-btn"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}
-        >
-          ↑
-        </button>
-      </motion.div>
-    </div>
-
-    <div className="footer-bottom">
-      <span className="footer-copy">
-        © 2026 BOSSONY Khadija & TAZI Kenza — Réalisé avec 💜
-      </span>
-    </div>
-  </footer>
-);
 
 export default Contact;
