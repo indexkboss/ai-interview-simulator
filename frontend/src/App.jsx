@@ -7,7 +7,6 @@ import './pages/Auth.css';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
 import Interview from './pages/Interview';
 import Report from './pages/Report';
 import Contact from './pages/Contact';
@@ -15,8 +14,9 @@ import Navbar from './components/Navbar';
 import Profile from './pages/Profile';
 import History from './pages/History';
 import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
 
-// Composant de redirection pour la racine
+//redirection pour la racine
 function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null; // ou un loader
@@ -36,7 +36,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/interview" element={<Interview />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/reports" element={<Report />} />
+          <Route path="/report" element={<Report />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/history" element={<History />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -56,7 +56,7 @@ export default function Navbar() {
         {user && <li><NavLink to="/dashboard" onClick={() => setMenuOpen(false)}>Tableau de bord</NavLink></li>}
         {!user && <li><NavLink to="/" onClick={() => setMenuOpen(false)}>Accueil</NavLink></li>}
         {user && <li><NavLink to="/home" onClick={() => setMenuOpen(false)}>Home</NavLink></li>}
-        {user && <li><NavLink to="/reports" onClick={() => setMenuOpen(false)}>Rapport</NavLink></li>}
+        {/* {user && <li><NavLink to="/report" onClick={() => setMenuOpen(false)}>Rapport</NavLink></li>} */}
         {user && <li><NavLink to="/history" onClick={() => setMenuOpen(false)}>Historique</NavLink></li>}
         <li><NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact</NavLink></li>
       </ul>
