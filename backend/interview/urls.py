@@ -1,8 +1,8 @@
 from django.urls import path
-from .views import emotion_api, audio_emotion_api, stress_api
+from .views import analyze_audio
+from .views import analyze_face_api
 
 urlpatterns = [
-    path("emotion/", emotion_api),
-    path("audio/", audio_emotion_api),
-    path("stress/", stress_api),
+    path("audio/analyze/", analyze_audio),
+    path("face/analyze/", analyze_face_api),
 ]
