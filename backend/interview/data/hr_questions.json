@@ -1,0 +1,53 @@
+{
+  "categories": {
+    "motivation": [
+      "Pourquoi avez-vous postulé à ce poste ?",
+      "Qu'est-ce qui vous attire dans notre entreprise ?",
+      "Où vous voyez-vous dans 5 ans ?",
+      "Qu'est-ce qui vous motive au quotidien dans votre travail ?",
+      "Pourquoi quittez-vous votre poste actuel ?"
+    ],
+    "parcours": [
+      "Pouvez-vous me présenter votre parcours professionnel ?",
+      "Quel a été votre plus grand accomplissement professionnel ?",
+      "Parlez-moi d'un projet dont vous êtes particulièrement fier.",
+      "Quelle expérience vous a le plus formé dans votre carrière ?",
+      "Comment vos expériences passées vous préparent-elles pour ce poste ?"
+    ],
+    "soft_skills": [
+      "Comment gérez-vous les situations de stress ?",
+      "Décrivez une situation où vous avez dû travailler en équipe face à un conflit.",
+      "Comment priorisez-vous vos tâches quand vous avez plusieurs deadlines ?",
+      "Parlez-moi d'un échec et ce que vous en avez appris.",
+      "Comment réagissez-vous face à une critique de votre travail ?",
+      "Décrivez votre style de leadership.",
+      "Comment vous adaptez-vous au changement ?"
+    ],
+    "culture_fit": [
+      "Comment décrirez-vous votre environnement de travail idéal ?",
+      "Préférez-vous travailler seul ou en équipe ?",
+      "Qu'est-ce qui est le plus important pour vous dans un emploi ?",
+      "Comment gérez-vous l'équilibre vie professionnelle / vie personnelle ?",
+      "Quelles sont vos valeurs professionnelles fondamentales ?"
+    ],
+    "competences": [
+      "Quelles sont vos principales forces ?",
+      "Quelle est votre principale faiblesse et comment y travaillez-vous ?",
+      "Quelles compétences cherchez-vous à développer ?",
+      "Comment restez-vous à jour dans votre domaine ?",
+      "Quelle est votre approche pour apprendre de nouvelles technologies ?"
+    ],
+    "situationnel": [
+      "Décrivez une situation où vous avez dû prendre une décision difficile.",
+      "Parlez-moi d'une fois où vous avez géré un client ou collègue difficile.",
+      "Comment avez-vous géré un projet avec des ressources limitées ?",
+      "Décrivez une situation où vous avez fait preuve d'initiative.",
+      "Parlez-moi d'une fois où vous avez dû changer d'approche en cours de route."
+    ]
+  },
+  "metadata": {
+    "version": "1.0",
+    "language": "fr",
+    "total_questions": 35
+  }
+}
