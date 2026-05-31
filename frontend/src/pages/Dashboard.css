@@ -279,3 +279,22 @@
   .dashboard-layout { padding: 12px; }
 }
 
+
+
+
+.stat-icon {
+  background: #f0f3ff;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  flex-shrink: 0;
+}
+
+.stat-icon-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}

@@ -5,6 +5,7 @@ import { useForm } from "@formspree/react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer"; // ← import du footer réutilisable
 import "./Contact.css";
+import githubIcon from "../assets/github.png";
 
 const Contact = () => {
   const navigate = useNavigate();
@@ -138,7 +139,7 @@ const Contact = () => {
       person: "Khadija",
       label: "GitHub (Khadija)",
       url: "https://github.com/indexkboss",
-      icon: <span style={{ fontSize: "24px" }}>🐙</span>,
+      icon: <img src={githubIcon} alt="GitHub" style={{ width: "24px", height: "24px" }} />
     },
     {
       person: "Khadija",
@@ -163,7 +164,7 @@ const Contact = () => {
       person: "Kenza",
       label: "GitHub (Kenza)",
       url: "https://github.com/TAZIKenza",
-      icon: <span style={{ fontSize: "24px" }}>🐙</span>,
+      icon: <img src={githubIcon} alt="GitHub" style={{ width: "24px", height: "24px" }} />
     },
     {
       person: "Kenza",
@@ -249,7 +250,7 @@ const Contact = () => {
             <p>Retrouvez-nous sur les réseaux sociaux ou contactez-nous directement</p>
 
             <div style={{ marginBottom: "24px" }}>
-              <h4 style={{ color: "#0f172a", marginBottom: "12px" }}>👩‍💻 Khadija BOSSONY</h4>
+              <h4 style={{ color: "#0f172a", marginBottom: "12px" }}>Khadija BOSSONY</h4>
               <div className="icons-grid">
                 {contactIcons.filter(i => i.person === "Khadija").map((item, index) =>
                   item.url ? (
@@ -282,7 +283,7 @@ const Contact = () => {
             </div>
 
             <div>
-              <h4 style={{ color: "#0f172a", marginBottom: "12px" }}>👩‍💻 Kenza TAZI</h4>
+              <h4 style={{ color: "#0f172a", marginBottom: "12px" }}>Kenza TAZI</h4>
               <div className="icons-grid">
                 {contactIcons.filter(i => i.person === "Kenza").map((item, index) =>
                   item.url ? (

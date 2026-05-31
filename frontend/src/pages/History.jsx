@@ -92,13 +92,13 @@ export default function History() {
     return (
       <div className="history-container">
         <div className="history-header">
-          <h1>📋 Historique des entretiens</h1>
+          <h1>Historique des entretiens</h1>
           <p>Retrouvez tous vos entraînements passés</p>
         </div>
 
         {sessions.length === 0 ? (
           <div className="empty-history">
-            <p>🎯 Aucun entretien réalisé pour le moment.</p>
+            <p>Aucun entretien réalisé pour le moment.</p>
             <button className="btn-primary" onClick={() => window.location.href = '/dashboard'}>
               Commencer un entraînement
             </button>
