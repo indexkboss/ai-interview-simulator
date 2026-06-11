@@ -11,6 +11,10 @@ import copyWritingImg from "../assets/copy-writing.png";
 import pasteImg from "../assets/paste.png";
 import SideNav from '../components/SideNav';
 import Footer from '../components/Footer';
+
+import pieChart from "../assets/counter.png";
+import histogram from "../assets/histogram.png";
+import trophy from "../assets/trophy.png";
 import './Dashboard.css';
 
 function readFileAsBase64(file) {
@@ -175,14 +179,69 @@ export default function Dashboard() {
         <div className="dashboard">
           <div className="dashboard-header">
             <h1>Tableau de bord</h1>
-            <p>Bonjour {user?.name || user?.email?.split('@')[0]} 👋</p>
+            <p>Bonjour {user?.name || user?.email?.split('@')[0]}</p>
           </div>
-
+{/* 
           <div className="stats-grid">
             <div className="stat-card"><div className="stat-icon">🎯</div><div><h3>Total entretiens</h3><p className="stat-number">{total}</p></div></div>
             <div className="stat-card"><div className="stat-icon">📊</div><div><h3>Score moyen</h3><p className="stat-number">{avgScore}/100</p></div></div>
             <div className="stat-card"><div className="stat-icon">🏆</div><div><h3>Dernier score</h3><p className="stat-number" style={{ color: scoreColor(lastScore) }}>{lastScore ?? '—'}</p></div></div>
-          </div>
+          </div> */}
+
+          <div className="stats-grid">
+
+  <div className="stat-card">
+    <div className="stat-icon">
+      <img
+        src={pieChart}
+        alt="Total entretiens"
+        className="stat-icon-img"
+      />
+    </div>
+
+    <div>
+      <h3>Total entretiens</h3>
+      <p className="stat-number">{total}</p>
+    </div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-icon">
+      <img
+        src={histogram}
+        alt="Score moyen"
+        className="stat-icon-img"
+      />
+    </div>
+
+    <div>
+      <h3>Score moyen</h3>
+      <p className="stat-number">{avgScore}/100</p>
+    </div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-icon">
+      <img
+        src={trophy}
+        alt="Dernier score"
+        className="stat-icon-img"
+      />
+    </div>
+
+    <div>
+      <h3>Dernier score</h3>
+
+      <p
+        className="stat-number"
+        style={{ color: scoreColor(lastScore) }}
+      >
+        {lastScore ?? '—'}
+      </p>
+    </div>
+  </div>
+
+</div>
 
           <div className="filters-bar">
             <div className="filter-group">
@@ -207,7 +266,7 @@ export default function Dashboard() {
 
           <div className="charts-row">
             <div className="chart-card">
-              <h3>📈 Évolution des scores (7 derniers jours)</h3>
+              <h3>Évolution des scores (7 derniers jours)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={scoreTrend}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -219,7 +278,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
             <div className="chart-card">
-              <h3>🥧 Répartition par type</h3>
+              <h3>Répartition par type</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie data={typeDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
@@ -233,7 +292,7 @@ export default function Dashboard() {
 
           <div className="charts-row">
             <div className="chart-card">
-              <h3>📊 Score moyen par type</h3>
+              <h3>Score moyen par type</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={scoresByType}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -245,7 +304,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
             <div className="chart-card">
-              <h3>📋 Derniers rapports</h3>
+              <h3>Derniers rapports</h3>
               {recentSessions.length === 0 ? <p className="empty-text">Aucun entretien récent</p> : (
                 <div className="recent-list">
                   {recentSessions.map(s => (
@@ -259,68 +318,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="config-section">
-            <h2>🚀 Nouvel entretien</h2>
-            <h3 className="section-subtitle">1. Mode de description {errors.mode && <span className="error-text">{errors.mode}</span>}</h3>
-            <div className="mode-selection">
-              <div className={`mode-card ${mode === 'manual' ? 'active' : ''}`} onClick={() => setMode('manual')}>
-                <img src={copyWritingImg} alt="manuel" style={{ width: "22px" }} />
-                <strong>Saisie manuelle</strong><p>Titre + description</p>
-              </div>
-              <div className={`mode-card ${mode === 'paste' ? 'active' : ''}`} onClick={() => setMode('paste')}>
-                <img src={pasteImg} alt="coller" style={{ width: "22px" }} />
-                <strong>Coller l'offre</strong><p>Depuis LinkedIn, email, etc.</p>
-              </div>
-              <div className={`mode-card ${mode === 'upload' ? 'active' : ''}`} onClick={() => setMode('upload')}>
-                📎 <strong>Uploader un fichier</strong><p>PDF / DOC / TXT</p>
-              </div>
-            </div>
 
-            <h3 className="section-subtitle">2. Type d'entretien {errors.interviewType && <span className="error-text">{errors.interviewType}</span>}</h3>
-            <div className="interview-type-grid">
-              {interviewTypes.map(t => (
-                <div key={t.value} className={`type-card ${interviewType === t.value ? 'active' : ''}`} onClick={() => setInterviewType(t.value)}>
-                  <span className="type-icon">{t.icon}</span>
-                  <div><strong>{t.label}</strong><p>{t.desc}</p></div>
-                  <input type="radio" checked={interviewType === t.value} onChange={() => setInterviewType(t.value)} onClick={(e) => e.stopPropagation()} />
-                </div>
-              ))}
-            </div>
-
-            <div className="dashboard-card">
-              <h3>📄 Votre CV {showRequired && interviewType !== 'hr' && <span style={{ color: 'red' }}>*</span>}{errors.cv && <span className="error-text">{errors.cv}</span>}</h3>
-              <p className="info-text">Formats acceptés : PDF, DOC, DOCX</p>
-              <label className="file-upload-label">
-                <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setCvFile(e.target.files[0])} style={{ display: 'none' }} />
-                {cvFile ? <span className="file-selected">✅ {cvFile.name}</span> : <span className="file-placeholder">Cliquer pour choisir un fichier</span>}
-              </label>
-            </div>
-
-            {mode === 'manual' && (
-              <div className="dashboard-card">
-                <h3>💼 Titre du poste {showRequired && <span style={{ color: 'red' }}>*</span>}{errors.jobTitle && <span className="error-text">{errors.jobTitle}</span>}</h3>
-                <input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="ex: Ingénieur Logiciel Senior" />
-              </div>
-            )}
-            {mode === 'paste' && (
-              <div className="dashboard-card">
-                <h3>📋 Offre d'emploi {showRequired && <span style={{ color: 'red' }}>*</span>}{errors.jobOffer && <span className="error-text">{errors.jobOffer}</span>}</h3>
-                <textarea value={jobOfferText} onChange={(e) => setJobOfferText(e.target.value)} rows={6} />
-              </div>
-            )}
-            {mode === 'upload' && (
-              <div className="dashboard-card">
-                <h3>📎 Fichier de l'offre {showRequired && <span style={{ color: 'red' }}>*</span>}{errors.file && <span className="error-text">{errors.file}</span>}</h3>
-                <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => setFile(e.target.files[0])} />
-              </div>
-            )}
-
-            <div className="dashboard-action">
-              <button className="btn-primary btn-lg" onClick={handleStart} disabled={loadingStart}>
-                {loadingStart ? '⏳ Préparation...' : '🚀 Démarrer l\'entretien'}
-              </button>
-            </div>
-          </div>
         </div>
       </div>
       <Footer logoText="PrepAI" />
