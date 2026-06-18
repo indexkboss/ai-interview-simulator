@@ -35,7 +35,9 @@ export default function Navbar() {
     navigate('/');
   };
 
-  if (loading) return null;
+    if (loading) {
+    return <nav className="navbar"></nav>;  // Navbar vide mais présent
+  }
 
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>

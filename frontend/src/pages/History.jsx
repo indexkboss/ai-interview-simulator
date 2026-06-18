@@ -1,44 +1,68 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { db } from '../services/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './History.css';
 
 export default function History() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!user) {
-        setError("Vous devez être connecté pour voir votre historique.");
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        const sessionsRef = collection(db, "users", user.uid, "sessions");
-        const q = query(sessionsRef, orderBy("date", "desc"));
-        const querySnapshot = await getDocs(q);
-        const sessionsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setSessions(sessionsData);
-        setError(null);
-      } catch (err) {
-        console.error("Erreur Firestore:", err);
-        setError("Impossible de charger l'historique. Vérifiez votre connexion et réessayez.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHistory();
-  }, [user]);
+  const fetchHistory = async () => {
+    if (!user) {
+      console.log("❌ User non connecté");
+      setError("Vous devez être connecté pour voir votre historique.");
+      setLoading(false);
+      return;
+    }
 
+    console.log("✅ User connecté:", user.uid);  // ← LOG
+    
+    setLoading(true);
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/report/history/${user.uid}`;
+      console.log("📡 Appel API:", url);  // ← LOG
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      console.log("📊 Réponse status:", response.status);  // ← LOG
+
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("📦 Data reçue:", data);  // ← LOG
+      
+      const sessionsData = data.interviews.map(interview => ({
+        id: interview.id,
+        jobTitle: interview.job_title,
+        interviewType: interview.interview_type,
+        score: interview.global_score,
+        date: interview.created_at,
+        duration: interview.duration_seconds
+      }));
+
+      setSessions(sessionsData);
+      setError(null);
+    } catch (err) {
+      console.error("❌ Erreur complète:", err);  // ← LOG
+      setError("Impossible de charger l'historique. Vérifiez votre connexion et réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchHistory();
+}, [user]);
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('fr-FR', {
@@ -65,7 +89,6 @@ export default function History() {
     }
   };
 
-  // Affichage du contenu principal
   const renderContent = () => {
     if (loading) {
       return (
@@ -99,7 +122,10 @@ export default function History() {
         {sessions.length === 0 ? (
           <div className="empty-history">
             <p>Aucun entretien réalisé pour le moment.</p>
-            <button className="btn-primary" onClick={() => window.location.href = '/dashboard'}>
+            <button
+              className="btn-primary"
+              onClick={() => navigate('/dashboard')}
+            >
               Commencer un entraînement
             </button>
           </div>
@@ -120,7 +146,7 @@ export default function History() {
                   )}
                 </div>
                 <div className="session-score" style={{ color: getScoreColor(session.score) }}>
-                  <span className="score-value">{session.score}</span>
+                  <span className="score-value">{Math.round(session.score)}</span>
                   <span className="score-unit">/100</span>
                 </div>
               </div>
@@ -133,6 +159,7 @@ export default function History() {
 
   return (
     <div className="history-page">
+      <Navbar />
       {renderContent()}
       <Footer logoText="PrepAI" />
     </div>

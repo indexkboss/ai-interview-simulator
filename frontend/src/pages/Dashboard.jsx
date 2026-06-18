@@ -11,7 +11,7 @@ import copyWritingImg from "../assets/copy-writing.png";
 import pasteImg from "../assets/paste.png";
 import SideNav from '../components/SideNav';
 import Footer from '../components/Footer';
-
+import Navbar from '../components/Navbar';
 import pieChart from "../assets/counter.png";
 import histogram from "../assets/histogram.png";
 import trophy from "../assets/trophy.png";
@@ -174,6 +174,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <Navbar />
       <div className="dashboard-layout">
         <SideNav />
         <div className="dashboard">

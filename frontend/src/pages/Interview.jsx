@@ -1,108 +1,40 @@
+// frontend/src/pages/Interview.jsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Interview.css";
 import AIAvatar from "../components/AIAvatar";
 
-// ─── Configuration des modèles Gemini ─────────────────────────────────────
-const MODELS = {
-  primary: "gemini-2.0-flash",      // modèle principal
-  fallback: "gemini-2.5-flash-lite" // modèle de secours (plus lent mais plus de quota)
-};
 
-// ─── Fonction d'appel API avec gestion des quotas ────────────────────────
-async function callGeminiWithRetry(prompt, model = MODELS.primary, retries = 3, delay = 1000) {
-  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-  if (!apiKey) throw new Error("Clé API Gemini manquante");
-
-  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
-  const requestBody = {
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 1000 },
-  };
-
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (res.status === 429) {
-        const retryAfter = res.headers.get("Retry-After");
-        const wait = retryAfter ? parseInt(retryAfter) * 1000 : delay * attempt;
-        console.warn(`Quota atteint pour ${model}, nouvel essai dans ${wait}ms...`);
-        await new Promise(resolve => setTimeout(resolve, wait));
-        continue;
-      }
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`Gemini API error ${res.status}: ${errText}`);
-      }
-
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-      if (!text) throw new Error("Réponse vide de l'API");
-      return text;
-    } catch (err) {
-      if (attempt === retries) throw err;
-      console.warn(`Tentative ${attempt} échouée, nouvelle tentative dans ${delay}ms`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  throw new Error("Échec après plusieurs tentatives");
-}
-
-// ─── askGemini – construit le prompt historique et appelle avec fallback ──
-async function askGemini(messages, systemPrompt) {
-  let fullPrompt = systemPrompt + "\n\n";
-  for (const msg of messages) {
-    const role = msg.role === "assistant" ? "Assistant : " : "Candidat : ";
-    fullPrompt += role + msg.content + "\n";
-  }
-  fullPrompt += "Assistant : ";
-
-  try {
-    // Tentative avec modèle principal
-    return await callGeminiWithRetry(fullPrompt, MODELS.primary);
-  } catch (err) {
-    console.warn("Modèle principal échoué, tentative avec fallback", err);
-    try {
-      return await callGeminiWithRetry(fullPrompt, MODELS.fallback);
-    } catch (fallbackErr) {
-      console.error("Fallback échoué également", fallbackErr);
-      throw new Error("Service IA indisponible (quota épuisé). Réessayez plus tard.");
-    }
-  }
+async function askBackendGemini(prompt) {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/interview/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  if (!res.ok) throw new Error("Backend error");
+  const data = await res.json();
+  return data.response;
 }
 
 function buildSystemPrompt(state) {
-  const { interviewType, jobTitle, jobDescription, jobOfferText, cvName } = state;
-  const typeLabel =
-    interviewType === "hr"
-      ? "RH (soft skills, motivation, parcours)"
-      : interviewType === "technical"
-      ? "technique (compétences spécifiques au poste)"
-      : "complet (RH + technique)";
-
-  return `Tu es un recruteur professionnel qui mène un entretien ${typeLabel} pour le poste de "${jobTitle || "non précisé"}".
-${jobDescription ? `Description du poste : ${jobDescription}` : ""}
-${jobOfferText ? `Offre d'emploi : ${jobOfferText}` : ""}
-${cvName ? `Le candidat a fourni son CV (${cvName}).` : ""}
-
-Règles STRICTES :
-- Pose UNE seule question à la fois, courte et précise.
-- Chaque question doit être DIFFÉRENTE des précédentes.
-- Réponds UNIQUEMENT avec le texte de la question, sans préambule ni numérotation.
-- Ne répète JAMAIS une question déjà posée.`;
+  const { interviewType, jobTitle, jobDescription, cvSummary } = state;
+  const typeLabel = interviewType === "hr" ? "RH" : interviewType === "technical" ? "technique" : "complet";
+  return `Tu es recruteur senior. Entretien ${typeLabel} pour: ${jobTitle || "un poste"}.
+${cvSummary ? `Candidat: ${cvSummary.substring(0, 100)}` : ""}
+RÈGLES: Une seule question en français. Naturelle et professionnelle. Juste la question, rien d'autre.`;
 }
 
-// ─── Composant principal ──────────────────────────────────────────────────
 export default function Interview() {
   const location = useLocation();
   const navigate = useNavigate();
   const sessionState = location.state || {};
+
+  useEffect(() => {
+    if (!location.state || !location.state.interviewType) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [location.state, navigate]);
+
   const { interviewType = "hr", jobTitle = "" } = sessionState;
   const maxQuestions = interviewType === "full" ? 10 : 5;
   const systemPrompt = buildSystemPrompt(sessionState);
@@ -126,11 +58,13 @@ export default function Interview() {
     isSpeaking: false,
     isListening: false,
     isLoading: false,
+    loadingMessage: "L'IA réfléchit...",
     currentEmotion: "neutral",
     emotionLog: [],
     cameraReady: false,
     error: null,
   });
+
   const patch = (delta) => setUi((prev) => ({ ...prev, ...delta }));
 
   const timeRef = useRef(0);
@@ -140,6 +74,30 @@ export default function Interview() {
   const emotionIntervalRef = useRef(null);
   const startListeningRef = useRef(null);
 
+  const loadingMessages = [
+    "L'IA réfléchit à votre question...",
+    "Analyse de votre réponse...",
+    "Préparation de la prochaine question...",
+    "Traitement en cours...",
+  ];
+  const loadingMsgIndex = useRef(0);
+  const loadingIntervalRef = useRef(null);
+
+  const startLoadingMessages = () => {
+    loadingMsgIndex.current = 0;
+    patch({ isLoading: true, loadingMessage: loadingMessages[0] });
+    loadingIntervalRef.current = setInterval(() => {
+      loadingMsgIndex.current = (loadingMsgIndex.current + 1) % loadingMessages.length;
+      patch({ loadingMessage: loadingMessages[loadingMsgIndex.current] });
+    }, 3000);
+  };
+
+  const stopLoadingMessages = () => {
+    clearInterval(loadingIntervalRef.current);
+    patch({ isLoading: false });
+  };
+
+  // TIMER
   useEffect(() => {
     const t = setInterval(() => {
       timeRef.current += 1;
@@ -148,8 +106,10 @@ export default function Interview() {
     return () => clearInterval(t);
   }, []);
 
-  const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+  const formatTime = (s) =>
+    `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
+  // CAMERA
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
@@ -162,67 +122,91 @@ export default function Interview() {
           };
         }
       })
-      .catch((err) => console.error("Caméra:", err));
+      .catch((err) => {
+        console.error("Erreur caméra:", err);
+        patch({ error: "Impossible d'accéder à la caméra." });
+      });
     return () => {
       videoRef.current?.srcObject?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
-  useEffect(() => {
-    if (!window.faceapi) return;
+  // EMOTIONS
+  // EMOTIONS - ✅ ATTENDRE QUE FACE-API SOIT CHARGÉ
+useEffect(() => {
+  // Attendre que face-api soit disponible
+  const checkFaceAPI = () => {
+    if (!window.faceapi) {
+      console.log("[FACE-API] Chargement en cours...");
+      setTimeout(checkFaceAPI, 500);
+      return;
+    }
+
+    console.log("✅ [FACE-API] Chargé! Chargement des modèles...");
     const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/";
+    
     Promise.all([
       window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       window.faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-    ])
-      .then(() => {
-        emotionIntervalRef.current = setInterval(async () => {
-          if (!videoRef.current) return;
-          try {
-            const det = await window.faceapi
-              .detectSingleFace(videoRef.current, new window.faceapi.TinyFaceDetectorOptions())
-              .withFaceExpressions();
-            if (det?.expressions) {
-              const top = Object.entries(det.expressions).sort((a, b) => b[1] - a[1])[0][0];
-              session.current.emotionLog.push({ time: timeRef.current, emotion: top });
-              patch({ currentEmotion: top, emotionLog: [...session.current.emotionLog] });
+    ]).then(() => {
+      console.log("✅ [FACE-API] Modèles chargés! Capture émotions active.");
+      emotionIntervalRef.current = setInterval(async () => {
+        if (!videoRef.current?.srcObject) return;
+        try {
+          const det = await window.faceapi
+            .detectSingleFace(videoRef.current, new window.faceapi.TinyFaceDetectorOptions())
+            .withFaceExpressions();
+          if (det?.expressions) {
+            const emotions = Object.entries(det.expressions).sort((a, b) => b[1] - a[1]);
+            const topEmotion = emotions[0][0];
+            const confidence = emotions[0][1];
+            if (confidence > 0.3) {
+              session.current.emotionLog.push({
+                time: timeRef.current,
+                emotion: topEmotion,
+                confidence,
+              });
+              patch({
+                currentEmotion: topEmotion,
+                emotionLog: [...session.current.emotionLog],
+              });
+              console.log(`[EMOTION] ${topEmotion} (${confidence.toFixed(2)})`);
             }
-          } catch (_) {}
-        }, 2000);
-      })
-      .catch(() => {});
-    return () => clearInterval(emotionIntervalRef.current);
-  }, []);
+          }
+        } catch (e) {
+          // Erreur de détection, continue quand même
+        }
+      }, 2000);
+    }).catch(err => {
+      console.error("[FACE-API] Erreur chargement modèles:", err);
+    });
+  };
 
+  checkFaceAPI();
+
+  return () => {
+    if (emotionIntervalRef.current) clearInterval(emotionIntervalRef.current);
+  };
+}, []);
+
+  // TTS
   const speak = useCallback((text) => {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "fr-FR";
     utterance.rate = 0.95;
-
-    const doSpeak = () => {
-      const voices = speechSynthesis.getVoices();
-      const frVoice = voices.find(v => v.lang.startsWith("fr") && v.name.toLowerCase().includes("female")) ||
-                      voices.find(v => v.lang.startsWith("fr")) || voices[0];
-      if (frVoice) utterance.voice = frVoice;
-      utterance.onstart = () => patch({ isSpeaking: true });
-      utterance.onend = () => {
-        patch({ isSpeaking: false });
-        startListeningRef.current?.();
-      };
-      utterance.onerror = () => {
-        patch({ isSpeaking: false });
-        startListeningRef.current?.();
-      };
-      speechSynthesis.speak(utterance);
+    utterance.onstart = () => patch({ isSpeaking: true });
+    utterance.onend = () => {
+      patch({ isSpeaking: false });
+      startListeningRef.current?.();
     };
-    speechSynthesis.getVoices().length ? doSpeak() : (speechSynthesis.onvoiceschanged = doSpeak);
+    speechSynthesis.speak(utterance);
   }, []);
 
+  // STT
   const startListening = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
-    recognitionRef.current?.abort();
     const rec = new SR();
     rec.lang = "fr-FR";
     rec.continuous = true;
@@ -234,16 +218,12 @@ export default function Interview() {
         const t = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
           session.current.transcript += " " + t;
-          patch({ transcript: session.current.transcript.trim() });
         } else {
           interim += t;
         }
       }
-      session.current.liveTranscript = interim;
-      patch({ liveTranscript: interim });
+      patch({ transcript: session.current.transcript, liveTranscript: interim });
     };
-    rec.onerror = () => patch({ isListening: false });
-    rec.onend = () => patch({ isListening: false });
     rec.start();
     patch({ isListening: true });
   }, []);
@@ -253,121 +233,131 @@ export default function Interview() {
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
     recognitionRef.current = null;
-    session.current.liveTranscript = "";
     patch({ isListening: false, liveTranscript: "" });
   }, []);
 
+  // ✅ CORRIGÉ : navigate passe maintenant jobTitle + interviewType
   const handleNextQuestion = useCallback(async () => {
     const s = session.current;
-    if (s.isEnding || s.isProcessing) return;
+    if (s.isProcessing) return;
     s.isProcessing = true;
-
     stopListening();
 
-    const userAnswer = (s.transcript + " " + s.liveTranscript).trim() || "(pas de réponse)";
-    const completedQA = { question: s.currentQuestion, answer: userAnswer };
-    s.answers = [...s.answers, completedQA];
+    const answer = (s.transcript + " " + s.liveTranscript).trim() || "(pas de réponse)";
+    s.answers.push({ question: s.currentQuestion, answer });
     s.index++;
     s.transcript = "";
     s.liveTranscript = "";
     patch({ transcript: "", liveTranscript: "", index: s.index });
 
     if (s.index >= maxQuestions) {
-      s.isEnding = true;
-      speechSynthesis.cancel();
-      clearInterval(emotionIntervalRef.current);
+      // ✅ BUG 1 CORRIGÉ : on passe jobTitle et interviewType
       navigate("/report", {
         state: {
           answers: s.answers,
           emotionLog: s.emotionLog,
           duration: timeRef.current,
-          jobTitle: sessionState.jobTitle,
-          interviewType: sessionState.interviewType,
+          jobTitle: jobTitle,             // ✅ AJOUTÉ
+          interviewType: interviewType,   // ✅ AJOUTÉ
         },
       });
       return;
     }
 
-    patch({ isLoading: true, error: null });
+    startLoadingMessages();
+
     try {
-      const history = s.answers.flatMap((qa) => [
-        { role: "assistant", content: qa.question },
-        { role: "user", content: qa.answer },
-      ]);
-      const nextQ = await askGemini(history, systemPrompt);
+      const lastQA = s.answers.slice(-2).map(
+        (qa) => `Q: ${qa.question}\nR: ${qa.answer}`
+      ).join("\n");
+      const prompt = `${systemPrompt}\n\nDerniers échanges:\n${lastQA}\n\nProchaine question:`;
+      const nextQ = await askBackendGemini(prompt);
       s.currentQuestion = nextQ;
-      patch({ currentQuestion: nextQ, isLoading: false });
+      stopLoadingMessages();
+      patch({ currentQuestion: nextQ });
       speak(nextQ);
     } catch (err) {
-      console.error(err);
-      patch({ error: "L'IA est momentanément indisponible (quota atteint). Veuillez réessayer plus tard." });
-      const fallback = "Pouvez-vous me parler d'un défi professionnel que vous avez surmonté ?";
+      const fallback = "Pouvez-vous décrire une expérience importante ?";
       s.currentQuestion = fallback;
-      patch({ currentQuestion: fallback, isLoading: false });
+      stopLoadingMessages();
+      patch({ currentQuestion: fallback });
       speak(fallback);
-    } finally {
-      s.isProcessing = false;
     }
-  }, [navigate, speak, stopListening, systemPrompt, sessionState, maxQuestions]);
 
+    s.isProcessing = false;
+  }, [navigate, speak, stopListening, systemPrompt, maxQuestions, jobTitle, interviewType]);
+
+  // FIRST QUESTION
   useEffect(() => {
     let cancelled = false;
-    patch({ isLoading: true });
-    askGemini([{ role: "user", content: "Commence l'entretien par la première question." }], systemPrompt)
-      .then((q) => {
+    (async () => {
+      startLoadingMessages();
+      try {
+        const q = await askBackendGemini(
+          `${systemPrompt}\nCommence l'entretien. Pose la première question:`
+        );
         if (cancelled) return;
         session.current.currentQuestion = q;
-        session.current.index = 0;
-        patch({ currentQuestion: q, index: 0, isLoading: false });
+        stopLoadingMessages();
+        patch({ currentQuestion: q });
         speak(q);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        const fallback = "Bonjour, pouvez-vous vous présenter brièvement ?";
-        session.current.currentQuestion = fallback;
-        patch({ currentQuestion: fallback, isLoading: false });
+      } catch {
+        const fallback = "Présentez-vous en quelques mots.";
+        stopLoadingMessages();
+        patch({ currentQuestion: fallback });
         speak(fallback);
-      });
+      }
+    })();
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line
+  }, []);
 
-  const emotionEmoji = {
-    happy: "😊", neutral: "😐", sad: "😔",
-    angry: "😤", fearful: "😨", disgusted: "🤢", surprised: "😲",
-  };
-
-  const { currentQuestion, index, transcript, liveTranscript,
-    isSpeaking, isListening, isLoading, currentEmotion, emotionLog, cameraReady, error } = ui;
+  const {
+    currentQuestion, index, transcript, liveTranscript,
+    isSpeaking, isListening, isLoading, loadingMessage,
+    currentEmotion, cameraReady, error,
+  } = ui;
 
   return (
     <div className="zoom-container">
       <div className="topbar">
         <div className="brand">⚡ PrepAI Interview Room</div>
+        <div className="timer">{formatTime(displayTime)}</div>
         <div className="status">
-          {error ? "⚠️ Problème de connexion IA" :
-           isLoading ? "⏳ IA réfléchit..." :
-           isSpeaking ? "🔊 IA parle..." :
-           isListening ? "🎙️ À vous de parler..." : "En attente"}
+          {isLoading ? `⏳ ${loadingMessage}` : isSpeaking ? "🔊 L'IA parle..." : isListening ? "🎤 En écoute..." : "⏸ En attente"}
         </div>
-        <div className="topbar-right">
-          <div className="emotion-badge">{emotionEmoji[currentEmotion] || "😐"} {currentEmotion}</div>
-          <div className="question-counter">{index + 1} / {maxQuestions}</div>
-          <div className="timer">⏱ {formatTime(displayTime)}</div>
+        <div className="progress">
+          Question {Math.min(index + 1, maxQuestions)} / {maxQuestions}
         </div>
       </div>
+
+      {error && <div className="error-banner">⚠️ {error}</div>}
 
       <div className="main">
         <div className="ai-panel">
           <AIAvatar isSpeaking={isSpeaking} />
           <div className={`speech-bubble ${isLoading ? "loading" : ""}`}>
-            {error ? error : isLoading ? "En réflexion..." : currentQuestion}
+            {isLoading ? (
+              <span className="loading-text">
+                <span className="dot-anim">●</span> {loadingMessage}
+              </span>
+            ) : (
+              currentQuestion || "Initialisation..."
+            )}
           </div>
-          <div className="action-buttons">
-            <button className="btn btn-mic" onClick={isListening ? stopListening : startListening} disabled={isSpeaking || isLoading}>
-              {isListening ? "⏹ Stop micro" : "🎙️ Parler"}
+          <div className="controls">
+            <button
+              className={`btn-mic ${isListening ? "active" : ""}`}
+              onClick={isListening ? stopListening : startListening}
+              disabled={isLoading || isSpeaking}
+            >
+              {isListening ? "⏹ Arrêter" : "🎤 Parler"}
             </button>
-            <button className="btn btn-next" onClick={handleNextQuestion} disabled={isLoading || isSpeaking}>
-              {index + 1 >= maxQuestions ? "🏁 Terminer" : "Suivant →"}
+            <button
+              className="btn-next"
+              onClick={handleNextQuestion}
+              disabled={isLoading}
+            >
+              {index + 1 >= maxQuestions ? "🏁 Terminer" : "➡ Suivant"}
             </button>
           </div>
           {(transcript || liveTranscript) && (
@@ -377,21 +367,13 @@ export default function Interview() {
             </div>
           )}
         </div>
+
         <div className="user-panel">
-          <div className="camera-box">
-            <video ref={videoRef} autoPlay playsInline muted />
-            {!cameraReady && <div className="camera-placeholder">📷 Activation caméra...</div>}
+          <video ref={videoRef} autoPlay muted />
+          {!cameraReady && <div className="camera-loading">📷 Caméra...</div>}
+          <div className="emotion-badge">
+            {currentEmotion !== "neutral" ? `😊 ${currentEmotion}` : ""}
           </div>
-          <div className="user-label">Vous (Candidat){isListening && <span className="mic-indicator"> 🔴</span>}</div>
-          {emotionLog.length > 0 && (
-            <div className="emotion-timeline">
-              {emotionLog.slice(-8).map((e, i) => (
-                <span key={i} title={e.emotion} className="emotion-dot">
-                  {emotionEmoji[e.emotion] || "😐"}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

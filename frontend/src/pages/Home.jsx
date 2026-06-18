@@ -20,7 +20,7 @@ function readFileAsBase64(file) {
   });
 }
 
-export default function Dashboard() {
+export default function Home() {
   const navigate = useNavigate();
   const [showRequired, setShowRequired] = useState(false);
   const [mode, setMode] = useState(null);
