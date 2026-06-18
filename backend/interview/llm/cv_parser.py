@@ -1,28 +1,22 @@
 """
 llm/cv_parser.py
-Extrait le texte d'un CV (PDF ou texte brut) et identifie les compétences clés.
-Utilise PyMuPDF pour le PDF et optionnellement le LLM pour l'extraction structurée.
+Parse le CV avec Ollama (llama3.2:3b)
 """
 
 import re
-import httpx
+import requests
+import json
 from pathlib import Path
 
-OLLAMA_URL   = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "mistral"
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "llama3.2:3b"   # ✅ Remplacé gemma3:4b
+TIMEOUT = 30             # ✅ Réduit à 30s
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# EXTRACTION PDF
-# ─────────────────────────────────────────────────────────────────────────────
 
 def extract_text_from_pdf(file_path: str) -> str:
-    """
-    Extrait le texte brut d'un PDF avec PyMuPDF (fitz).
-    Installe avec: pip install pymupdf
-    """
+    """Extrait texte depuis PDF"""
     try:
-        import fitz   # PyMuPDF
+        import fitz
         doc = fitz.open(file_path)
         text = ""
         for page in doc:
@@ -30,20 +24,16 @@ def extract_text_from_pdf(file_path: str) -> str:
         doc.close()
         return text.strip()
     except ImportError:
-        raise RuntimeError("PyMuPDF non installé. Lancez: pip install pymupdf")
+        raise RuntimeError("PyMuPDF non installé")
     except Exception as e:
-        raise RuntimeError(f"Erreur lecture PDF: {e}")
+        raise RuntimeError(f"Erreur PDF: {e}")
 
 
 def extract_text_from_upload(content: bytes, filename: str) -> str:
-    """
-    Extrait le texte depuis des bytes (upload FastAPI).
-    Gère PDF et texte brut (.txt, .md).
-    """
+    """Extrait texte depuis upload"""
     ext = Path(filename).suffix.lower()
 
     if ext == ".pdf":
-        # Écriture temporaire pour PyMuPDF
         import tempfile, os
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp.write(content)
@@ -57,85 +47,94 @@ def extract_text_from_upload(content: bytes, filename: str) -> str:
         return content.decode("utf-8", errors="ignore")
 
     else:
-        raise ValueError(f"Format non supporté: {ext}. Utilisez PDF, TXT ou MD.")
+        raise ValueError(f"Format non supporté: {ext}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# EXTRACTION STRUCTURÉE VIA LLM
-# ─────────────────────────────────────────────────────────────────────────────
-
-async def extract_cv_profile(cv_text: str) -> dict:
-    """
-    Utilise le LLM pour extraire un profil structuré depuis le texte brut du CV.
-    Retourne: {skills, experience_years, education, languages, job_titles}
-    """
-    prompt = f"""Analyse ce CV et extrait les informations suivantes en JSON strict.
-Réponds UNIQUEMENT avec le JSON, sans markdown ni commentaire.
-
-CV:
-{cv_text[:4000]}
-
-Format JSON attendu:
-{{
-  "competences_techniques": ["liste", "des", "technologies"],
-  "competences_soft": ["liste", "des", "soft skills"],
-  "annees_experience": 0,
-  "formations": ["diplôme 1", "diplôme 2"],
-  "langues": ["français", "anglais"],
-  "postes_precedents": ["titre poste 1", "titre poste 2"],
-  "projets_notables": ["description courte projet 1"]
-}}
-"""
+def _call_ollama(prompt: str) -> str:
+    """Appel Ollama optimisé"""
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(OLLAMA_URL, json={
-                "model": OLLAMA_MODEL,
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": MODEL,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0.1}
-            })
-            raw = resp.json()["response"].strip()
-            # Nettoyer le JSON si le LLM ajoute du markdown
-            raw = re.sub(r"```json|```", "", raw).strip()
-            import json
-            return json.loads(raw)
+                "options": {
+                    "temperature": 0.2,
+                    "num_predict": 400,   # ✅ Assez pour le JSON CV
+                    "num_ctx": 1500,      # ✅ Contexte moyen
+                    "top_k": 10,
+                }
+            },
+            timeout=TIMEOUT
+        )
+        
+        if response.status_code == 200:
+            return response.json().get("response", "").strip()
+        else:
+            raise Exception(f"Ollama error {response.status_code}")
+    
+    except requests.exceptions.Timeout:
+        print("[OLLAMA TIMEOUT] cv_parser fallback regex")
+        return ""
     except Exception as e:
-        print(f"[CV Parser] LLM extraction failed: {e}, using regex fallback")
+        print(f"[OLLAMA ERROR] {e}")
+        return ""
+
+
+async def extract_cv_profile(cv_text: str) -> dict:
+    """Extrait profil depuis CV"""
+
+    prompt = f"""Analyse ce CV. Réponds UNIQUEMENT avec ce JSON valide (rien d'autre):
+{{
+  "competences_techniques": ["skill1", "skill2"],
+  "competences_soft": ["soft1"],
+  "annees_experience": 2,
+  "formations": ["formation1"],
+  "langues": ["français"],
+  "postes_precedents": ["poste1"],
+  "projets_notables": ["projet1"]
+}}
+
+CV: {cv_text[:1500]}"""
+
+    try:
+        result = _call_ollama(prompt)
+
+        if result:
+            start = result.find("{")
+            end = result.rfind("}") + 1
+
+            if start != -1 and end > start:
+                return json.loads(result[start:end])
+
+        return _regex_extract(cv_text)
+
+    except Exception as e:
+        print(f"[CV Parser Error]: {e}")
         return _regex_extract(cv_text)
 
 
 def _regex_extract(cv_text: str) -> dict:
-    """
-    Extraction basique par regex si le LLM est indisponible.
-    Détecte les technologies courantes dans le texte.
-    """
+    """Extraction basique par regex (fallback fiable)"""
     tech_keywords = [
-        "Python", "JavaScript", "TypeScript", "React", "Vue", "Angular",
-        "Node.js", "FastAPI", "Django", "Flask", "Java", "Spring",
-        "Docker", "Kubernetes", "AWS", "Azure", "GCP", "PostgreSQL",
-        "MySQL", "MongoDB", "Redis", "Git", "CI/CD", "Machine Learning",
-        "Deep Learning", "TensorFlow", "PyTorch", "Scikit-learn",
-        "Pandas", "NumPy", "SQL", "REST", "GraphQL", "Microservices",
-        "Linux", "Bash", "C++", "C#", ".NET", "PHP", "Laravel"
+        "Python", "JavaScript", "React", "Node.js", "FastAPI", "Django",
+        "Docker", "AWS", "PostgreSQL", "MongoDB", "Git", "TensorFlow",
+        "PyTorch", "SQL", "REST", "Java", "C++", "Machine Learning",
+        "TypeScript", "Vue", "Angular", "Redis", "Kubernetes", "Linux"
     ]
 
-    found_skills = []
-    text_lower = cv_text.lower()
-    for kw in tech_keywords:
-        if kw.lower() in text_lower:
-            found_skills.append(kw)
-
-    # Estimation années d'expérience (cherche des dates)
+    found_skills = [kw for kw in tech_keywords if kw.lower() in cv_text.lower()]
     years = re.findall(r"20[12]\d", cv_text)
     exp_years = 0
     if len(years) >= 2:
         years_int = sorted([int(y) for y in years])
-        exp_years = years_int[-1] - years_int[0]
+        exp_years = min(years_int[-1] - years_int[0], 20)
 
     return {
         "competences_techniques": found_skills,
         "competences_soft": [],
-        "annees_experience": min(exp_years, 20),
+        "annees_experience": exp_years,
         "formations": [],
         "langues": ["français"],
         "postes_precedents": [],
@@ -144,16 +143,12 @@ def _regex_extract(cv_text: str) -> dict:
 
 
 def format_cv_summary(profile: dict) -> str:
-    """Formate le profil extrait en texte lisible pour le prompt LLM."""
+    """Formate le résumé CV"""
     parts = []
     if profile.get("competences_techniques"):
-        parts.append("Compétences techniques: " + ", ".join(profile["competences_techniques"]))
-    if profile.get("competences_soft"):
-        parts.append("Soft skills: " + ", ".join(profile["competences_soft"]))
+        parts.append("Tech: " + ", ".join(profile["competences_techniques"][:5]))
     if profile.get("annees_experience"):
-        parts.append(f"Expérience: {profile['annees_experience']} ans")
+        parts.append(f"Exp: {profile['annees_experience']} ans")
     if profile.get("formations"):
-        parts.append("Formation: " + "; ".join(profile["formations"]))
-    if profile.get("postes_precedents"):
-        parts.append("Postes: " + ", ".join(profile["postes_precedents"]))
+        parts.append("Formations: " + "; ".join(profile["formations"][:2]))
     return "\n".join(parts)
