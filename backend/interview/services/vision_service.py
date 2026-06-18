@@ -24,7 +24,7 @@ from vision.posture       import analyze_posture
 from vision.stress_vision import compute_vision_stress
 
 
-def analyze_frame(image_path: str) -> dict:
+def analyze_face(image_path: str) -> dict:
     """Pipeline complet sur une image."""
     t0 = time.perf_counter()
 

@@ -25,3 +25,14 @@ node_modules/
 dist/
 build/
 
+# Modèles MediaPipe
+backend/interview/*.task
+
+# Base de données locale
+backend/interview_simulator.db
+
+# Images temporaires
+backend/temp_*.jpg
+
+# Fichiers VS Code
+.vscode/
