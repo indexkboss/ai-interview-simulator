@@ -36,3 +36,7 @@ backend/temp_*.jpg
 
 # Fichiers VS Code
 .vscode/
+
+.vscode/
+backend/interview_simulator.db
+backend/temp_*.jpg
